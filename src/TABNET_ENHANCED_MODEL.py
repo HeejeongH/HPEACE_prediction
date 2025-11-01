@@ -254,9 +254,9 @@ def optimize_tabnet(X_train, y_train, n_trials=30):
             X_tr, X_val = X_train[train_idx], X_train[val_idx]
             y_tr, y_val = y_train[train_idx], y_train[val_idx]
             
-            # TabNet requires 2D target array
-            y_tr_2d = y_tr.reshape(-1, 1)
-            y_val_2d = y_val.reshape(-1, 1)
+            # TabNet requires 2D target array (convert to numpy if needed)
+            y_tr_2d = y_tr.values.reshape(-1, 1) if hasattr(y_tr, 'values') else y_tr.reshape(-1, 1)
+            y_val_2d = y_val.values.reshape(-1, 1) if hasattr(y_val, 'values') else y_val.reshape(-1, 1)
             
             model.fit(
                 X_tr, y_tr_2d,
@@ -321,9 +321,9 @@ def create_tabnet_model(X_train, y_train, X_test, y_test, use_optuna=True, n_tri
             seed=42
         )
     
-    # TabNet requires 2D target array
-    y_train_2d = y_train.reshape(-1, 1)
-    y_test_2d = y_test.reshape(-1, 1)
+    # TabNet requires 2D target array (convert to numpy if needed)
+    y_train_2d = y_train.values.reshape(-1, 1) if hasattr(y_train, 'values') else y_train.reshape(-1, 1)
+    y_test_2d = y_test.values.reshape(-1, 1) if hasattr(y_test, 'values') else y_test.reshape(-1, 1)
     
     # 학습
     model.fit(
