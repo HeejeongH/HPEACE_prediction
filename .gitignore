@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# CatBoost
+catboost_info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Data
+*.csv
+*.xlsx
+*.parquet
+
+# Models
+*.pkl
+*.joblib
+*.pth
+*.pt
