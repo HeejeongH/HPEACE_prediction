@@ -137,7 +137,12 @@ def create_advanced_features(df, available_vars):
         if food in df.columns:
             df['sodium_risk_score'] += df[food] * weight
     
-    df['diet_variety_count'] = (df[available_vars] > 0).sum(axis=1)
+    # 실제로 데이터에 존재하는 컬럼만 필터링
+    existing_diet_vars = [var for var in available_vars if var in df.columns]
+    if existing_diet_vars:
+        df['diet_variety_count'] = (df[existing_diet_vars] > 0).sum(axis=1)
+    else:
+        df['diet_variety_count'] = 0
     
     if 'age' in df.columns:
         df['age_healthy_interaction'] = df['age'] * df['weighted_healthy_score']
