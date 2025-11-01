@@ -137,10 +137,15 @@ def create_advanced_features(df, available_vars):
         if food in df.columns:
             df['sodium_risk_score'] += df[food] * weight
     
-    # 실제로 데이터에 존재하는 컬럼만 필터링
+    # 실제로 데이터에 존재하는 컬럼만 필터링 (숫자형만)
     existing_diet_vars = [var for var in available_vars if var in df.columns]
     if existing_diet_vars:
-        df['diet_variety_count'] = (df[existing_diet_vars] > 0).sum(axis=1)
+        # 숫자형 컬럼만 선택
+        numeric_diet_vars = [var for var in existing_diet_vars if pd.api.types.is_numeric_dtype(df[var])]
+        if numeric_diet_vars:
+            df['diet_variety_count'] = (df[numeric_diet_vars] > 0).sum(axis=1)
+        else:
+            df['diet_variety_count'] = 0
     else:
         df['diet_variety_count'] = 0
     
