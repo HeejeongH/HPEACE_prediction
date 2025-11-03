@@ -33,3 +33,13 @@ env/
 *.joblib
 *.pth
 *.pt
+
+# Windows
+desktop.ini
+Thumbs.db
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
