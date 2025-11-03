@@ -15,7 +15,24 @@
 
 ## 🚀 빠른 시작
 
-### Windows 사용자
+### ⭐ Python으로 실행 (추천, 모든 OS)
+
+```bash
+# 대화형 메뉴로 실행 (가장 쉬움!)
+python run_training.py
+
+# 또는 직접 모드 선택
+python run_training.py safe      # 안전 모드 (추천)
+python run_training.py full      # 전체 최적화
+python run_training.py tabnet    # TabNet만
+python run_training.py quick     # 빠른 테스트
+```
+
+📖 **상세 가이드**: [`docs/PYTHON_EXECUTION.md`](docs/PYTHON_EXECUTION.md)
+
+---
+
+### Windows - Batch 파일로 실행
 
 ```cmd
 :: 1. GPU 확인 (권장)
@@ -33,19 +50,23 @@ cd ..
 train.bat
 ```
 
-### Linux/Mac 사용자
+📖 **Windows 가이드**: [`docs/WINDOWS_GUIDE.md`](docs/WINDOWS_GUIDE.md)
+
+---
+
+### Linux/Mac
 
 ```bash
-:: 1. 의존성 설치
+# 1. 의존성 설치
 pip install -r requirements.txt
 
-:: 2. 빠른 검증 (1분)
+# 2. 빠른 검증 (1분)
 cd src
 python ultra_quick_demo.py
 
-:: 3. 전체 학습 (1-2시간)
+# 3. Python 스크립트로 실행 (추천)
 cd ..
-python -c "from src.TABNET_ENHANCED_MODEL import main; main(use_tabnet_stacking=True, use_optuna=False)"
+python run_training.py safe
 ```
 
 **빠른 검증 결과 예시** (체중 예측):
