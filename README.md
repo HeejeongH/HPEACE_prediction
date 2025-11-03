@@ -15,29 +15,43 @@
 
 ## 🚀 빠른 시작
 
-### 1. 의존성 설치
+### Windows 사용자
 
-```bash
-pip install -r requirements.txt
-```
+```cmd
+:: 1. GPU 확인 (권장)
+python check_cuda.py
 
-### 2. 빠른 검증 (1분)
+:: 2. GPU 버전 설치 (GPU 있으면)
+install_gpu.bat
 
-```bash
+:: 3. 빠른 테스트 (1분)
 cd src
 python ultra_quick_demo.py
+
+:: 4. 전체 학습 (30분-1시간, GPU 가속)
+cd ..
+train.bat
 ```
 
-**결과 예시** (체중 예측):
+### Linux/Mac 사용자
+
+```bash
+:: 1. 의존성 설치
+pip install -r requirements.txt
+
+:: 2. 빠른 검증 (1분)
+cd src
+python ultra_quick_demo.py
+
+:: 3. 전체 학습 (1-2시간)
+cd ..
+python -c "from src.TABNET_ENHANCED_MODEL import main; main(use_tabnet_stacking=True, use_optuna=False)"
+```
+
+**빠른 검증 결과 예시** (체중 예측):
 ```
 기존 XGBoost:     R² = 0.776
 개선 Stacking:    R² = 0.953  (+22.8% 향상!)
-```
-
-### 3. 전체 학습 실행 (4~6시간)
-
-```bash
-./run_full_training.sh
 ```
 
 **설정**:
