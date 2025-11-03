@@ -7,8 +7,14 @@ TabNet Enhanced Model - Python 실행 스크립트
 import sys
 import os
 
+# 스크립트 파일의 디렉토리를 기준으로 경로 설정
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 # src 폴더를 path에 추가
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(script_dir, 'src'))
+
+# 작업 디렉토리를 프로젝트 루트로 변경 (상대 경로 문제 해결)
+os.chdir(script_dir)
 
 from TABNET_ENHANCED_MODEL import main
 

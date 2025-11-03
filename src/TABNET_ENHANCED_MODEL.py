@@ -11,6 +11,7 @@ TabNet 딥러닝 모델이 추가된 개선 버전
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -48,6 +49,29 @@ print("=" * 80)
 def load_and_preprocess_data(file_path='../data/total_again.xlsx'):
     """데이터 로드 및 기본 전처리"""
     print("\n📂 데이터 로드 중...")
+    
+    # 경로가 존재하지 않으면 대체 경로 시도
+    if not os.path.exists(file_path):
+        # 현재 스크립트 위치 기준으로 경로 재구성
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        alt_path = os.path.join(script_dir, '..', 'data', 'total_again.xlsx')
+        if os.path.exists(alt_path):
+            file_path = alt_path
+        else:
+            # 프로젝트 루트에서 실행된 경우
+            root_path = os.path.join(os.getcwd(), 'data', 'total_again.xlsx')
+            if os.path.exists(root_path):
+                file_path = root_path
+            else:
+                raise FileNotFoundError(
+                    f"데이터 파일을 찾을 수 없습니다.\n"
+                    f"시도한 경로들:\n"
+                    f"  1. ../data/total_again.xlsx\n"
+                    f"  2. {alt_path}\n"
+                    f"  3. {root_path}\n"
+                    f"현재 작업 디렉토리: {os.getcwd()}"
+                )
+    
     df = pd.read_excel(file_path, index_col='R-ID')
     if 'Unnamed: 0' in df.columns:
         df = df.drop(columns=['Unnamed: 0'])
