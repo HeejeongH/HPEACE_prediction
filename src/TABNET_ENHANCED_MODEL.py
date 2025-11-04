@@ -390,10 +390,29 @@ def create_tabnet_model(X_train, y_train, X_test, y_test, use_optuna=True, n_tri
 
 class TabNetWrapper(BaseEstimator, RegressorMixin):
     """TabNet을 sklearn 스타일로 래핑"""
-    def __init__(self, tabnet_model):
+    def __init__(self, tabnet_model=None):
+        self.tabnet_model = tabnet_model
         self.model = tabnet_model
     
     def fit(self, X, y):
+        # TabNet 모델이 없으면 새로 생성 (clone 시)
+        if self.model is None:
+            self.model = TabNetRegressor(
+                n_d=32,
+                n_a=32,
+                n_steps=5,
+                gamma=1.5,
+                lambda_sparse=1e-4,
+                momentum=0.3,
+                mask_type='entmax',
+                optimizer_fn=torch.optim.Adam,
+                optimizer_params=dict(lr=2e-2),
+                scheduler_params={"step_size": 10, "gamma": 0.9},
+                scheduler_fn=torch.optim.lr_scheduler.StepLR,
+                verbose=0,
+                seed=42
+            )
+        
         # y가 2D가 아니면 2D로 변환
         if len(y.shape) == 1:
             y = y.reshape(-1, 1)
@@ -414,6 +433,17 @@ class TabNetWrapper(BaseEstimator, RegressorMixin):
         if len(pred.shape) > 1:
             pred = pred.ravel()
         return pred
+    
+    def get_params(self, deep=True):
+        """sklearn 호환을 위한 get_params"""
+        return {"tabnet_model": self.tabnet_model}
+    
+    def set_params(self, **params):
+        """sklearn 호환을 위한 set_params"""
+        if "tabnet_model" in params:
+            self.tabnet_model = params["tabnet_model"]
+            self.model = params["tabnet_model"]
+        return self
 
 
 def create_tabnet_stacking_ensemble(X_train, y_train, X_test, y_test,
