@@ -19,6 +19,7 @@ warnings.filterwarnings('ignore')
 import xgboost as xgb
 import lightgbm as lgb
 from catboost import CatBoostRegressor
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, StackingRegressor
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -387,12 +388,16 @@ def create_tabnet_model(X_train, y_train, X_test, y_test, use_optuna=True, n_tri
 # 3. TabNet 통합 Stacking Ensemble
 # ============================================================================
 
-class TabNetWrapper:
+class TabNetWrapper(BaseEstimator, RegressorMixin):
     """TabNet을 sklearn 스타일로 래핑"""
     def __init__(self, tabnet_model):
         self.model = tabnet_model
     
     def fit(self, X, y):
+        # y가 2D가 아니면 2D로 변환
+        if len(y.shape) == 1:
+            y = y.reshape(-1, 1)
+        
         self.model.fit(
             X, y,
             max_epochs=100,
@@ -404,7 +409,11 @@ class TabNetWrapper:
         return self
     
     def predict(self, X):
-        return self.model.predict(X)
+        pred = self.model.predict(X)
+        # 1D로 변환 (sklearn stacking이 요구)
+        if len(pred.shape) > 1:
+            pred = pred.ravel()
+        return pred
 
 
 def create_tabnet_stacking_ensemble(X_train, y_train, X_test, y_test,
