@@ -378,12 +378,19 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
     print("📊 TabNet 전체 결과 요약")
     print("="*80)
     
-    results_df = pd.DataFrame(results).T
-    print("\n", results_df.round(4))
+    # None 값 제거 (실패한 지표 제외)
+    valid_results = {k: v for k, v in results.items() if v is not None}
     
-    # 결과 저장
-    results_df.to_csv('../result/tabnet_all_results.csv')
-    print(f"\n💾 전체 결과 저장: ../result/tabnet_all_results.csv")
+    if len(valid_results) > 0:
+        results_df = pd.DataFrame(valid_results).T
+        print("\n", results_df.round(4))
+        
+        # 결과 저장
+        results_df.to_csv('../result/tabnet_all_results.csv')
+        print(f"\n💾 전체 결과 저장: ../result/tabnet_all_results.csv")
+    else:
+        print("\n⚠️ 모든 지표에서 오류가 발생했습니다.")
+        results_df = pd.DataFrame()
     
     return results_df
 

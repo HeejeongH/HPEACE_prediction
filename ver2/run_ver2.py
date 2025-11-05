@@ -53,11 +53,15 @@ def step2_tabnet():
     print("="*80)
     
     # 전처리 데이터 확인
-    data_path = '../data/ver2_paired_visits.csv'
+    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    data_path = os.path.abspath(data_path)
+    
     if not os.path.exists(data_path):
         print(f"\n⚠️  전처리 데이터가 없습니다: {data_path}")
         print("먼저 '1. 데이터 전처리'를 실행하세요.")
         return False
+    
+    print(f"📂 데이터 로드: {data_path}")
     
     try:
         from tabnet_model import train_all_targets
@@ -78,11 +82,15 @@ def step3_xgboost():
     print("="*80)
     
     # 전처리 데이터 확인
-    data_path = '../data/ver2_paired_visits.csv'
+    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    data_path = os.path.abspath(data_path)
+    
     if not os.path.exists(data_path):
         print(f"\n⚠️  전처리 데이터가 없습니다: {data_path}")
         print("먼저 '1. 데이터 전처리'를 실행하세요.")
         return False
+    
+    print(f"📂 데이터 로드: {data_path}")
     
     try:
         from xgboost_model import train_all_targets
@@ -103,11 +111,15 @@ def step4_lstm():
     print("="*80)
     
     # 전처리 데이터 확인
-    data_path = '../data/ver2_paired_visits.csv'
+    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    data_path = os.path.abspath(data_path)
+    
     if not os.path.exists(data_path):
         print(f"\n⚠️  전처리 데이터가 없습니다: {data_path}")
         print("먼저 '1. 데이터 전처리'를 실행하세요.")
         return False
+    
+    print(f"📂 데이터 로드: {data_path}")
     
     try:
         from lstm_model import train_all_targets
