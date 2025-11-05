@@ -1,15 +1,58 @@
-# 🧠 식습관 기반 바이오마커 예측 모델 (TabNet 딥러닝 포함)
+# 🧠 식습관 기반 바이오마커 예측 모델
 
 ## 📊 프로젝트 개요
 
-식습관 데이터를 활용하여 건강 바이오마커를 예측하는 머신러닝 모델입니다.
-**TabNet 딥러닝**과 **Stacking Ensemble**을 결합하여 높은 예측 정확도를 달성합니다.
+식습관 데이터를 활용하여 건강 바이오마커를 예측하는 AI 모델입니다.
 
-### 주요 특징
-- 🧠 **TabNet 딥러닝**: Google의 테이블 데이터 전용 딥러닝 모델
-- 📦 **Stacking Ensemble**: XGBoost, LightGBM, CatBoost, Random Forest 결합
-- 🎯 **Optuna 최적화**: 자동 하이퍼파라미터 튜닝
-- 🔍 **해석 가능성**: Attention 메커니즘으로 예측 근거 제시
+### 🔄 두 가지 버전
+
+#### **Ver1: Cross-sectional Analysis (횡단면 분석)** ✅ 완료
+- **TabNet 딥러닝** + **Stacking Ensemble**
+- 특정 시점의 식습관 → 같은 시점의 건강지표 예측
+- "이런 식습관 사람들의 평균적인 건강상태"
+- 평균 R² = 0.90 (우수한 성능)
+
+#### **Ver2: Longitudinal Analysis (종단 변화 예측)** 🚧 개발 중
+- **시계열 딥러닝** (LSTM, Transformer)
+- 식습관 **변화** → 건강지표 **변화** 예측
+- "식습관을 이렇게 바꾸면 건강이 이렇게 변합니다"
+- 진짜 **인과관계** 파악 가능
+
+---
+
+## 📁 프로젝트 구조
+
+```
+HPEACE_prediction/
+├── ver1/                      # Ver1: Cross-sectional Analysis ✅
+│   ├── src/                   # 모델 코드
+│   ├── run_training.py        # 실행 스크립트
+│   └── README.md              # Ver1 상세 설명
+│
+├── ver2/                      # Ver2: Longitudinal Analysis 🚧
+│   ├── data_preprocessing.py  # 데이터 재구성 (NEW!)
+│   ├── model_training.py      # 모델 학습 (예정)
+│   └── README.md              # Ver2 개발 계획
+│
+├── data/                      # 데이터 폴더
+├── result/                    # 결과 저장
+├── docs/                      # 문서
+│   ├── ANALYSIS_REPORT.md     # Ver1 분석 보고서
+│   └── INPUT_OUTPUT_EXPLANATION.md
+└── README.md                  # 이 파일
+```
+
+### 🔀 버전 비교
+
+| 항목 | Ver1 (횡단면) | Ver2 (종단) |
+|------|---------------|-------------|
+| **분석 방법** | Cross-sectional | Longitudinal |
+| **입력** | 식습관 (1개 시점) | 식습관 변화 (2개 시점) |
+| **출력** | 건강지표 | 건강지표 **변화량** |
+| **질문** | "이런 식습관의 건강은?" | "바꾸면 얼마나 변할까?" |
+| **관계** | 상관관계 | 인과관계 |
+| **데이터** | 29,098개 독립 샘플 | ~18,000개 방문 쌍 |
+| **상태** | ✅ 완료 (R² 0.90) | 🚧 개발 중 |
 
 ---
 
