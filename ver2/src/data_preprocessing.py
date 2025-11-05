@@ -18,7 +18,7 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 
-def load_data(file_path='../../data/total_again.xlsx'):
+def load_data(file_path='../data/total_again.xlsx'):
     """원본 데이터 로드"""
     print("=" * 80)
     print("📂 Step 1: 데이터 로드")
