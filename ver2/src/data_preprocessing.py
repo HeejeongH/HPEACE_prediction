@@ -235,12 +235,17 @@ def calculate_derived_features(paired_df):
         print(f"   ✅ 순 식습관 개선도 계산")
     
     # 4. 시간 정규화 변화율 (월간 변화율)
+    # ⚠️ 주의: 타겟 변수(건강지표)의 _change는 제외 (Data Leakage 방지)
+    target_biomarkers = ['체중', '체질량지수', '허리둘레(WAIST)', 'SBP', 'DBP', 'TG']
     if 'time_gap_days' in df.columns:
         for col in df.columns:
             if col.endswith('_change') and not col.endswith('_change_pct'):
-                months = df['time_gap_days'] / 30.0
-                df[f'{col}_per_month'] = df[col] / months
-        print(f"   ✅ 월간 변화율 계산")
+                # 타겟 변수는 제외
+                is_target = any(col.startswith(f'{bio}_change') for bio in target_biomarkers)
+                if not is_target:
+                    months = df['time_gap_days'] / 30.0
+                    df[f'{col}_per_month'] = df[col] / months
+        print(f"   ✅ 월간 변화율 계산 (타겟 변수 제외)")
     
     print(f"\n✅ 파생 특성 생성 완료: {len(df.columns) - len(paired_df.columns)}개 추가")
     
