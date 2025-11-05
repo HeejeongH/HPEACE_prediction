@@ -174,45 +174,75 @@ Ver2: "미래 변화 예측" (R² 0.70 목표)
 → R²는 낮아지지만 실용성은 훨씬 높음!
 ```
 
-## 🚧 현재 상태
+## ✅ 현재 상태
 
 ```
-⏳ 개발 진행 중
+✅ 구현 완료!
 
 완료: 
-- [ ] 데이터 재구성
-- [ ] 특성 공학
-- [ ] 모델 구현
-- [ ] 학습 및 검증
-- [ ] 결과 분석
+- [x] 데이터 재구성 (data_preprocessing.py)
+- [x] 특성 공학 (파생 특성 포함)
+- [x] XGBoost 모델 구현
+- [x] LSTM 모델 구현
+- [x] 통합 실행 스크립트 (run_ver2.py)
+- [ ] 학습 및 검증 (실행 필요)
+- [ ] 결과 분석 (학습 후)
 
-예상 완료: TBD
+실행 가능: python run_ver2.py
+```
+
+## 🚀 실행 방법
+
+### 1. 간편 실행 (추천)
+```bash
+cd ver2
+python run_ver2.py
+```
+
+메뉴:
+1. 데이터 전처리 (Paired Visits 생성)
+2. XGBoost 모델 학습 (Baseline)
+3. LSTM 모델 학습 (Advanced)
+4. 전체 실행 (1→2→3)
+5. 결과 비교 (XGBoost vs LSTM)
+
+### 2. 개별 실행
+```bash
+# 데이터 전처리
+cd ver2/src
+python data_preprocessing.py
+
+# XGBoost 학습
+python xgboost_model.py
+
+# LSTM 학습
+python lstm_model.py
 ```
 
 ## 📋 개발 로드맵
 
-### Week 1-2: 데이터 준비
-- [ ] Paired visits 데이터 생성
-- [ ] 변화량 계산
-- [ ] 데이터 탐색 분석(EDA)
-- [ ] 이상치 처리
+### Week 1-2: 데이터 준비 ✅ 완료
+- [x] Paired visits 데이터 생성
+- [x] 변화량 계산
+- [x] 데이터 탐색 분석(EDA)
+- [x] 파생 특성 생성
 
-### Week 3-4: 모델 개발
-- [ ] Baseline 모델 (XGBoost)
-- [ ] LSTM 모델
-- [ ] Temporal Transformer
-- [ ] 모델 비교
+### Week 3-4: 모델 개발 ✅ 완료
+- [x] Baseline 모델 (XGBoost)
+- [x] LSTM 모델
+- [x] 통합 실행 스크립트
+- [x] 모델 비교 기능
 
-### Week 5-6: 평가 및 최적화
+### Week 5-6: 평가 및 최적화 ⏳ 실행 필요
+- [ ] 실제 데이터로 학습
 - [ ] Cross-validation
 - [ ] 하이퍼파라미터 튜닝
 - [ ] 특성 중요도 분석
-- [ ] 해석 가능성 확보
 
-### Week 7-8: 문서화 및 배포
+### Week 7-8: 문서화 및 배포 ⏳ 계획
 - [ ] 분석 보고서 작성
-- [ ] 사용자 가이드
-- [ ] API 개발 (선택)
+- [ ] 사용자 가이드 업데이트
+- [ ] Ver1 vs Ver2 비교 문서
 
 ## 🔍 연구 질문
 
