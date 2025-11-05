@@ -133,10 +133,23 @@ tail -f training.log
 ### 📊 상세 분석 보고서
 
 전체 분석 결과는 다음 문서를 참조하세요:
+
+#### 📑 핵심 문서
 - **[📄 종합 분석 보고서](docs/ANALYSIS_REPORT.md)** (16KB)
   - 10개 섹션, 1,000+ 줄 상세 분석
   - 방법론, 결과, 임상적 의의, 향후 연구
   - 특성 중요도, SHAP 분석, 오차 분석
+
+- **[🎯 입력/출력 상세 설명](docs/INPUT_OUTPUT_EXPLANATION.md)** (17.7KB) ⭐ NEW!
+  - 19개 식습관 변수 상세 설명
+  - 6개 바이오마커별 예측 해석
+  - 실제 사용 예시 3가지 (건강/개선필요/3개월추적)
+  - 맞춤형 개선 계획 및 예상 효과
+
+#### 📚 기술 문서
+- [Python 실행 가이드](docs/PYTHON_EXECUTION.md)
+- [Windows 가이드](docs/WINDOWS_GUIDE.md)
+- [GPU 설정 가이드](docs/WINDOWS_GPU_SETUP.md)
 
 ---
 
