@@ -351,14 +351,24 @@ def save_processed_data(paired_df, output_path='../data/ver2_paired_visits.csv')
 
 def main():
     """메인 실행 함수"""
+    import os
+    
     print("\n")
     print("=" * 80)
     print("Ver2: Longitudinal Change Prediction - 데이터 전처리")
     print("=" * 80)
     print("\n⏱️ 시작 시간:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
+    # 작업 디렉토리 기준 경로 설정 (run_ver2.py에서 ver2/로 chdir 했음)
+    base_dir = os.getcwd()  # ver2/
+    data_dir = os.path.join(base_dir, '..', 'data')  # project_root/data/
+    result_dir = os.path.join(base_dir, 'result')  # ver2/result/
+    
+    input_file = os.path.join(data_dir, 'total_again.xlsx')
+    output_file = os.path.join(data_dir, 'ver2_paired_visits.csv')
+    
     # 1. 데이터 로드
-    df = load_data()
+    df = load_data(input_file)
     
     # 2. 방문 패턴 분석
     visit_counts = analyze_visit_patterns(df)
@@ -374,10 +384,10 @@ def main():
     paired_df = calculate_derived_features(paired_df)
     
     # 5. 탐색적 데이터 분석
-    exploratory_data_analysis(paired_df)
+    exploratory_data_analysis(paired_df, output_dir=result_dir)
     
     # 6. 데이터 저장
-    save_processed_data(paired_df)
+    save_processed_data(paired_df, output_path=output_file)
     
     print("\n" + "=" * 80)
     print("✅ 전처리 완료!")
