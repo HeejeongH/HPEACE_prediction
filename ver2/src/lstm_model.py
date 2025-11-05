@@ -361,9 +361,9 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
     df = pd.read_csv(data_path)
     print(f"\n✅ 데이터 로드 완료: {len(df):,}개 샘플")
     
+    # 건강지표 목록 (데이터에 실제 존재하는 컬럼명 사용)
     health_indicators = [
-        '체중', '수축기혈압', '이완기혈압', '공복혈당', 
-        '총콜레스테롤', 'HDL콜레스테롤', 'LDL콜레스테롤', '중성지방'
+        '체중', '체질량지수', '허리둘레(WAIST)', 'SBP', 'DBP', 'TG'
     ]
     
     results = {}

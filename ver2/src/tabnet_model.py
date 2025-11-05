@@ -188,10 +188,29 @@ class TabNetChangePredictor:
         
         # Loss curve
         plt.subplot(1, 2, 1)
-        if 'loss' in history:
-            plt.plot(history['loss'], label='Train Loss', linewidth=2)
-        if 'val_0_rmse' in history:
-            plt.plot(history['val_0_rmse'], label='Val RMSE', linewidth=2)
+        try:
+            # Try accessing history as dict or object
+            loss_data = None
+            val_data = None
+            
+            if hasattr(history, 'history'):
+                loss_data = history.history.get('loss', None)
+                val_data = history.history.get('val_0_rmse', None)
+            else:
+                try:
+                    loss_data = history.get('loss', None) if hasattr(history, 'get') else None
+                    val_data = history.get('val_0_rmse', None) if hasattr(history, 'get') else None
+                except:
+                    pass
+            
+            if loss_data is not None:
+                plt.plot(loss_data, label='Train Loss', linewidth=2)
+            if val_data is not None:
+                plt.plot(val_data, label='Val RMSE', linewidth=2)
+                
+        except Exception as e:
+            print(f"   ⚠️  학습 곡선 데이터 로드 실패: {e}")
+            
         plt.xlabel('Epoch', fontsize=12)
         plt.ylabel('Loss', fontsize=12)
         plt.title(f'{self.target_variable} TabNet 학습 곡선', fontsize=14)
@@ -200,12 +219,24 @@ class TabNetChangePredictor:
         
         # Learning rate
         plt.subplot(1, 2, 2)
-        if 'lr' in history:
-            plt.plot(history['lr'], linewidth=2, color='orange')
-            plt.xlabel('Epoch', fontsize=12)
-            plt.ylabel('Learning Rate', fontsize=12)
-            plt.title('Learning Rate Schedule', fontsize=14)
-            plt.grid(True, alpha=0.3)
+        try:
+            lr_data = None
+            if hasattr(history, 'history'):
+                lr_data = history.history.get('lr', None)
+            else:
+                try:
+                    lr_data = history.get('lr', None) if hasattr(history, 'get') else None
+                except:
+                    pass
+                    
+            if lr_data is not None:
+                plt.plot(lr_data, linewidth=2, color='orange')
+                plt.xlabel('Epoch', fontsize=12)
+                plt.ylabel('Learning Rate', fontsize=12)
+                plt.title('Learning Rate Schedule', fontsize=14)
+                plt.grid(True, alpha=0.3)
+        except Exception:
+            pass
         
         plt.tight_layout()
         output_path = f'../result/tabnet_{self.target_variable}_learning_curve.png'
@@ -332,10 +363,9 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
     df = pd.read_csv(data_path)
     print(f"\n✅ 데이터 로드 완료: {len(df):,}개 샘플")
     
-    # 건강지표 목록
+    # 건강지표 목록 (데이터에 실제 존재하는 컬럼명 사용)
     health_indicators = [
-        '체중', '수축기혈압', '이완기혈압', '공복혈당', 
-        '총콜레스테롤', 'HDL콜레스테롤', 'LDL콜레스테롤', '중성지방'
+        '체중', '체질량지수', '허리둘레(WAIST)', 'SBP', 'DBP', 'TG'
     ]
     
     results = {}
