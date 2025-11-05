@@ -315,11 +315,19 @@ class TabNetChangePredictor:
         fig, axes = plt.subplots(2, 5, figsize=(20, 8))
         axes = axes.flatten()
         
-        for i in range(min(10, len(masks))):
-            mask = masks[i]
+        # masks shape: (n_samples, n_features) 또는 (n_steps, n_samples, n_features)
+        # 평균 attention 사용
+        if len(masks.shape) == 3:
+            # (n_steps, n_samples, n_features) -> (n_samples, n_features)
+            avg_masks = masks.mean(axis=0)
+        else:
+            avg_masks = masks
+        
+        for i in range(min(10, avg_masks.shape[0])):
+            mask = avg_masks[i]
             
             # Mask를 특성별로 시각화
-            axes[i].barh(range(len(self.feature_names)), mask)
+            axes[i].barh(range(len(self.feature_names)), mask, height=0.8)
             axes[i].set_yticks(range(len(self.feature_names)))
             axes[i].set_yticklabels([name[:20] for name in self.feature_names], fontsize=8)
             axes[i].set_xlabel('Attention', fontsize=10)
