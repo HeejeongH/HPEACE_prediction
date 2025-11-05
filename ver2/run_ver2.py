@@ -21,10 +21,11 @@ def print_menu():
     print("="*80)
     print("\n메뉴:")
     print("  1. 데이터 전처리 (Paired Visits 생성)")
-    print("  2. XGBoost 모델 학습 (Baseline)")
-    print("  3. LSTM 모델 학습 (Advanced)")
-    print("  4. 전체 실행 (1→2→3)")
-    print("  5. 결과 비교 (XGBoost vs LSTM)")
+    print("  2. TabNet 모델 학습 (Attention-based) ⭐")
+    print("  3. XGBoost 모델 학습 (Baseline)")
+    print("  4. LSTM 모델 학습 (Deep Learning)")
+    print("  5. 전체 실행 (1→2→3→4)")
+    print("  6. 결과 비교 (TabNet vs XGBoost vs LSTM)")
     print("  0. 종료")
     print("="*80)
 
@@ -45,10 +46,35 @@ def step1_preprocessing():
         return False
 
 
-def step2_xgboost():
-    """Step 2: XGBoost 학습"""
+def step2_tabnet():
+    """Step 2: TabNet 학습"""
     print("\n" + "="*80)
-    print("🎯 Step 2: XGBoost 모델 학습")
+    print("🎯 Step 2: TabNet 모델 학습")
+    print("="*80)
+    
+    # 전처리 데이터 확인
+    data_path = '../data/ver2_paired_visits.csv'
+    if not os.path.exists(data_path):
+        print(f"\n⚠️  전처리 데이터가 없습니다: {data_path}")
+        print("먼저 '1. 데이터 전처리'를 실행하세요.")
+        return False
+    
+    try:
+        from tabnet_model import train_all_targets
+        results = train_all_targets(data_path)
+        print("\n✅ TabNet 학습 완료!")
+        return True
+    except Exception as e:
+        print(f"\n❌ 오류 발생: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def step3_xgboost():
+    """Step 3: XGBoost 학습"""
+    print("\n" + "="*80)
+    print("🎯 Step 3: XGBoost 모델 학습")
     print("="*80)
     
     # 전처리 데이터 확인
@@ -70,10 +96,10 @@ def step2_xgboost():
         return False
 
 
-def step3_lstm():
-    """Step 3: LSTM 학습"""
+def step4_lstm():
+    """Step 4: LSTM 학습"""
     print("\n" + "="*80)
-    print("🎯 Step 3: LSTM 모델 학습")
+    print("🎯 Step 4: LSTM 모델 학습")
     print("="*80)
     
     # 전처리 데이터 확인
@@ -95,8 +121,8 @@ def step3_lstm():
         return False
 
 
-def step4_full_pipeline():
-    """Step 4: 전체 파이프라인"""
+def step5_full_pipeline():
+    """Step 5: 전체 파이프라인"""
     print("\n" + "="*80)
     print("🚀 전체 파이프라인 실행")
     print("="*80)
@@ -105,12 +131,16 @@ def step4_full_pipeline():
     if not step1_preprocessing():
         return False
     
-    # Step 2: XGBoost
-    if not step2_xgboost():
+    # Step 2: TabNet
+    if not step2_tabnet():
         return False
     
-    # Step 3: LSTM
-    if not step3_lstm():
+    # Step 3: XGBoost
+    if not step3_xgboost():
+        return False
+    
+    # Step 4: LSTM
+    if not step4_lstm():
         return False
     
     print("\n" + "="*80)
@@ -119,10 +149,10 @@ def step4_full_pipeline():
     return True
 
 
-def step5_compare_results():
-    """Step 5: 결과 비교"""
+def step6_compare_results():
+    """Step 6: 결과 비교"""
     print("\n" + "="*80)
-    print("📊 XGBoost vs LSTM 결과 비교")
+    print("📊 TabNet vs XGBoost vs LSTM 결과 비교")
     print("="*80)
     
     import pandas as pd
@@ -132,44 +162,54 @@ def step5_compare_results():
     plt.rcParams['axes.unicode_minus'] = False
     
     # 결과 파일 확인
+    tabnet_path = '../result/tabnet_all_results.csv'
     xgb_path = '../result/xgboost_all_results.csv'
     lstm_path = '../result/lstm_all_results.csv'
     
-    if not os.path.exists(xgb_path):
-        print(f"⚠️  XGBoost 결과 없음: {xgb_path}")
+    available_models = {}
+    
+    if os.path.exists(tabnet_path):
+        available_models['TabNet'] = pd.read_csv(tabnet_path, index_col=0)
+    
+    if os.path.exists(xgb_path):
+        available_models['XGBoost'] = pd.read_csv(xgb_path, index_col=0)
+    
+    if os.path.exists(lstm_path):
+        available_models['LSTM'] = pd.read_csv(lstm_path, index_col=0)
+    
+    if len(available_models) == 0:
+        print("⚠️  학습 결과가 없습니다. 먼저 모델을 학습하세요.")
         return False
     
-    if not os.path.exists(lstm_path):
-        print(f"⚠️  LSTM 결과 없음: {lstm_path}")
+    if len(available_models) == 1:
+        print(f"⚠️  모델이 1개만 있습니다. 비교를 위해 2개 이상 학습하세요.")
+        model_name = list(available_models.keys())[0]
+        print(f"\n📊 {model_name} 결과:")
+        print(available_models[model_name].round(4))
         return False
     
-    # 결과 로드
-    xgb_results = pd.read_csv(xgb_path, index_col=0)
-    lstm_results = pd.read_csv(lstm_path, index_col=0)
-    
-    print("\n📊 XGBoost 결과:")
-    print(xgb_results.round(4))
-    
-    print("\n📊 LSTM 결과:")
-    print(lstm_results.round(4))
+    # 결과 출력
+    for model_name, results in available_models.items():
+        print(f"\n📊 {model_name} 결과:")
+        print(results.round(4))
     
     # 비교 시각화
-    fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+    fig, axes = plt.subplots(2, 2, figsize=(18, 12))
     
     metrics = ['R²', 'RMSE', 'MAE', 'Direction_Accuracy']
+    model_names = list(available_models.keys())
     
     for idx, metric in enumerate(metrics):
         ax = axes[idx // 2, idx % 2]
         
-        indicators = xgb_results.index
+        indicators = available_models[model_names[0]].index
         x = range(len(indicators))
-        width = 0.35
+        width = 0.8 / len(model_names)
         
-        xgb_values = xgb_results[metric].values
-        lstm_values = lstm_results[metric].values
-        
-        ax.bar([i - width/2 for i in x], xgb_values, width, label='XGBoost', alpha=0.8)
-        ax.bar([i + width/2 for i in x], lstm_values, width, label='LSTM', alpha=0.8)
+        for i, model_name in enumerate(model_names):
+            values = available_models[model_name][metric].values
+            offset = (i - len(model_names)/2 + 0.5) * width
+            ax.bar([j + offset for j in x], values, width, label=model_name, alpha=0.8)
         
         ax.set_xlabel('건강지표', fontsize=12)
         ax.set_ylabel(metric, fontsize=12)
@@ -185,28 +225,43 @@ def step5_compare_results():
     print(f"\n💾 비교 그래프 저장: {output_path}")
     plt.close()
     
-    # 차이 계산
+    # 모델 간 평균 성능
     print("\n" + "="*80)
-    print("📈 모델 간 성능 차이 (LSTM - XGBoost)")
+    print("📈 모델별 평균 성능")
     print("="*80)
     
-    diff = lstm_results - xgb_results
-    print("\n", diff.round(4))
+    for model_name, results in available_models.items():
+        print(f"\n{model_name}:")
+        for metric in metrics:
+            avg_value = results[metric].mean()
+            print(f"  평균 {metric}: {avg_value:.4f}")
     
-    # 승자 카운트
+    # 지표별 최고 모델
     print("\n" + "="*80)
-    print("🏆 지표별 우수 모델")
+    print("🏆 지표별 최고 모델")
     print("="*80)
     
-    for metric in metrics:
-        if metric in ['R²', 'Direction_Accuracy']:  # 높을수록 좋음
-            better = (lstm_results[metric] > xgb_results[metric]).sum()
-        else:  # 낮을수록 좋음 (RMSE, MAE)
-            better = (lstm_results[metric] < xgb_results[metric]).sum()
-        
-        print(f"\n{metric}:")
-        print(f"  LSTM 우세: {better}/{len(indicators)} 지표")
-        print(f"  XGBoost 우세: {len(indicators) - better}/{len(indicators)} 지표")
+    for indicator in indicators:
+        print(f"\n{indicator}:")
+        for metric in metrics:
+            best_model = None
+            best_value = None
+            
+            for model_name, results in available_models.items():
+                value = results.loc[indicator, metric]
+                
+                # R²와 Direction_Accuracy는 높을수록 좋음
+                if metric in ['R²', 'Direction_Accuracy']:
+                    if best_value is None or value > best_value:
+                        best_value = value
+                        best_model = model_name
+                # RMSE, MAE는 낮을수록 좋음
+                else:
+                    if best_value is None or value < best_value:
+                        best_value = value
+                        best_model = model_name
+            
+            print(f"  {metric}: {best_model} ({best_value:.4f})")
     
     return True
 
@@ -217,7 +272,7 @@ def main():
         print_menu()
         
         try:
-            choice = input("\n선택 (0-5): ").strip()
+            choice = input("\n선택 (0-6): ").strip()
             
             if choice == '0':
                 print("\n👋 프로그램을 종료합니다.")
@@ -227,19 +282,22 @@ def main():
                 step1_preprocessing()
             
             elif choice == '2':
-                step2_xgboost()
+                step2_tabnet()
             
             elif choice == '3':
-                step3_lstm()
+                step3_xgboost()
             
             elif choice == '4':
-                step4_full_pipeline()
+                step4_lstm()
             
             elif choice == '5':
-                step5_compare_results()
+                step5_full_pipeline()
+            
+            elif choice == '6':
+                step6_compare_results()
             
             else:
-                print("\n⚠️  잘못된 선택입니다. 0-5 사이의 숫자를 입력하세요.")
+                print("\n⚠️  잘못된 선택입니다. 0-6 사이의 숫자를 입력하세요.")
             
             input("\n▶️  Enter를 눌러 계속...")
         

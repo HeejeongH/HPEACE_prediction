@@ -201,16 +201,20 @@ python run_ver2.py
 
 메뉴:
 1. 데이터 전처리 (Paired Visits 생성)
-2. XGBoost 모델 학습 (Baseline)
-3. LSTM 모델 학습 (Advanced)
-4. 전체 실행 (1→2→3)
-5. 결과 비교 (XGBoost vs LSTM)
+2. TabNet 모델 학습 (Attention-based) ⭐
+3. XGBoost 모델 학습 (Baseline)
+4. LSTM 모델 학습 (Deep Learning)
+5. 전체 실행 (1→2→3→4)
+6. 결과 비교 (TabNet vs XGBoost vs LSTM)
 
 ### 2. 개별 실행
 ```bash
 # 데이터 전처리
 cd ver2/src
 python data_preprocessing.py
+
+# TabNet 학습
+python tabnet_model.py
 
 # XGBoost 학습
 python xgboost_model.py
@@ -228,10 +232,11 @@ python lstm_model.py
 - [x] 파생 특성 생성
 
 ### Week 3-4: 모델 개발 ✅ 완료
+- [x] TabNet 모델 (Attention-based) ⭐
 - [x] Baseline 모델 (XGBoost)
 - [x] LSTM 모델
 - [x] 통합 실행 스크립트
-- [x] 모델 비교 기능
+- [x] 모델 비교 기능 (3개 모델)
 
 ### Week 5-6: 평가 및 최적화 ⏳ 실행 필요
 - [ ] 실제 데이터로 학습
