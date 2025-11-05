@@ -362,6 +362,12 @@ class TabNetChangePredictor:
 
 
 def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
+    """
+    모든 건강지표에 대해 TabNet 학습
+    
+    Args:
+        data_path: Ver2 paired visits 데이터 경로 (기본: ver2/data/ver2_paired_visits.csv)
+    """
     """모든 건강지표에 대해 TabNet 학습"""
     print("\n" + "="*80)
     print("🚀 Ver2 TabNet 전체 학습 시작")

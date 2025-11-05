@@ -18,7 +18,7 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 
-def load_data(file_path='../data/total_again.xlsx'):
+def load_data(file_path='../../data/total_again.xlsx'):
     """원본 데이터 로드"""
     print("=" * 80)
     print("📂 Step 1: 데이터 로드")
@@ -252,7 +252,7 @@ def calculate_derived_features(paired_df):
     return df
 
 
-def exploratory_data_analysis(paired_df, output_dir='../result/ver2_eda'):
+def exploratory_data_analysis(paired_df, output_dir='../result'):
     """탐색적 데이터 분석 및 시각화"""
     import os
     os.makedirs(output_dir, exist_ok=True)

@@ -52,8 +52,8 @@ def step2_tabnet():
     print("🎯 Step 2: TabNet 모델 학습")
     print("="*80)
     
-    # 전처리 데이터 확인
-    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    # 전처리 데이터 확인 (ver2/data 폴더)
+    data_path = os.path.join(script_dir, 'data', 'ver2_paired_visits.csv')
     data_path = os.path.abspath(data_path)
     
     if not os.path.exists(data_path):
@@ -81,8 +81,8 @@ def step3_xgboost():
     print("🎯 Step 3: XGBoost 모델 학습")
     print("="*80)
     
-    # 전처리 데이터 확인
-    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    # 전처리 데이터 확인 (ver2/data 폴더)
+    data_path = os.path.join(script_dir, 'data', 'ver2_paired_visits.csv')
     data_path = os.path.abspath(data_path)
     
     if not os.path.exists(data_path):
@@ -110,8 +110,8 @@ def step4_lstm():
     print("🎯 Step 4: LSTM 모델 학습")
     print("="*80)
     
-    # 전처리 데이터 확인
-    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    # 전처리 데이터 확인 (ver2/data 폴더)
+    data_path = os.path.join(script_dir, 'data', 'ver2_paired_visits.csv')
     data_path = os.path.abspath(data_path)
     
     if not os.path.exists(data_path):
