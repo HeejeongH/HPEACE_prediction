@@ -52,3 +52,5 @@ ehthumbs_vista.db
 .DS_Store
 .AppleDouble
 .LSOverride
+old/ 
+# Old files (too large for GitHub) 
