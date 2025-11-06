@@ -57,7 +57,7 @@ class TabNetChangePredictor:
         print(f"📊 [{self.target_variable}] 데이터 준비")
         print(f"{'='*80}")
         
-        # 특성 선택: 식습관 변화만 사용 (baseline 제외하여 leakage 방지)
+        # 특성 선택: 식습관 변화만 사용 (baseline 제거하여 leakage 방지)
         # '_change'가 포함되어 있고, 건강지표가 아닌 컬럼들
         diet_change_cols = [col for col in df.columns 
                            if '_change' in col and '건강' not in col 
@@ -85,6 +85,32 @@ class TabNetChangePredictor:
         print(f"   ✅ 특성 개수: {len(feature_cols)}개 (식습관 변화만)")
         print(f"   ✅ 타겟: {target_col}")
         print(f"   ⚠️  Baseline 제거: Data leakage 방지")
+        
+        # 🔍 CRITICAL: 특성 목록 상세 확인 (Leakage 검증)
+        print(f"\n   🔍 사용된 특성 상세 목록 (총 {len(feature_cols)}개):")
+        print("   " + "="*76)
+        for i, col in enumerate(feature_cols, 1):
+            print(f"      {i:2d}. {col}")
+        print("   " + "="*76)
+        
+        # CSV로 저장 (검증용)
+        features_df = pd.DataFrame({
+            'Feature_Index': range(1, len(feature_cols)+1),
+            'Feature_Name': feature_cols
+        })
+        features_csv = f'./result/features_used_{self.target_variable}.csv'
+        Path(features_csv).parent.mkdir(parents=True, exist_ok=True)
+        features_df.to_csv(features_csv, index=False, encoding='utf-8-sig')
+        print(f"   💾 특성 목록 저장: {features_csv}")
+        
+        # ⚠️ Baseline 제거 확인
+        baseline_cols = [col for col in feature_cols if 'baseline' in col.lower()]
+        if baseline_cols:
+            print(f"\n   ⚠️  WARNING: Baseline 특성 발견! (Data Leakage 위험)")
+            for col in baseline_cols:
+                print(f"      - {col}")
+        else:
+            print(f"\n   ✅ Baseline 특성 없음: Data Leakage 제거 확인")
         
         return X, y, df_clean
     
