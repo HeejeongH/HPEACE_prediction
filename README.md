@@ -39,6 +39,8 @@ HPEACE_prediction/
 ├── docs/                      # 문서
 │   ├── ANALYSIS_REPORT.md     # Ver1 분석 보고서
 │   └── INPUT_OUTPUT_EXPLANATION.md
+├── fix_desktop_ini.bat        # Windows 명령 프롬프트용 desktop.ini 문제 해결
+├── fix_desktop_ini.sh         # Git Bash용 desktop.ini 문제 해결
 └── README.md                  # 이 파일
 ```
 
@@ -413,6 +415,60 @@ device_name='cuda'  # TabNet에서
 ### 특정 바이오마커 실패
 - 해당 바이오마커의 제외 변수 목록 확인
 - 데이터 결측치 확인
+
+---
+
+## 🔧 문제 해결
+
+### ❌ `fatal: bad object refs/desktop.ini` 오류
+
+Windows에서 Git pull 시 desktop.ini 파일로 인한 오류가 발생할 수 있습니다.
+
+**해결 방법:**
+
+#### 방법 1: 자동 해결 스크립트 실행 (추천)
+
+**Windows 명령 프롬프트:**
+```cmd
+fix_desktop_ini.bat
+```
+
+**Git Bash:**
+```bash
+bash fix_desktop_ini.sh
+```
+
+스크립트가 자동으로:
+- ✅ Git에서 desktop.ini 제거
+- ✅ 로컬 desktop.ini 파일 삭제
+- ✅ .git/refs/desktop.ini 특별 처리
+- ✅ 원격 저장소와 동기화
+
+#### 방법 2: 수동 해결
+
+```cmd
+# 1. desktop.ini 제거
+git rm -f --cached desktop.ini
+del /f /s /q /a:h desktop.ini
+
+# 2. .git/refs/desktop.ini 삭제
+del /f /q .git\refs\desktop.ini
+
+# 3. Git 정리
+git gc --prune=now
+
+# 4. 강제 동기화
+git fetch origin
+git reset --hard origin/main
+```
+
+#### 방법 3: 저장소 새로 클론
+
+```cmd
+cd ..
+move #Prediction #Prediction_backup
+git clone https://github.com/HeejeongH/HPEACE_prediction.git #Prediction
+```
 
 ---
 
