@@ -72,12 +72,40 @@ Row 3: [사람B_방문1] 식습관 → 건강지표
 
 ## 🚀 실행 방법
 
+### 로컬 PC에서 실행 (추천)
+
+샌드박스 환경의 메모리 제약으로 **로컬 PC에서 실행을 권장**합니다.
+
 ```bash
-# 안전 모드 (30분)
+# 1. 빠른 시작 가이드
+QUICK_START.md 참고
+
+# 2. 안전 모드 실행 (60분)
 python run_training.py safe
 
-# 전체 최적화 (17시간)
+# 3. 전체 최적화 (2시간)
 python run_training.py full
+```
+
+**자세한 가이드**: `LOCAL_EXECUTION_GUIDE.md`
+
+### 고급 분석 (모델 생성 후)
+
+```bash
+# Phase 1: 서브그룹 분석
+python advanced_analysis.py
+
+# Phase 2: 임계값 분석 (완료됨)
+python threshold_analysis.py
+
+# Phase 3: 서브그룹 모델링
+python subgroup_modeling.py
+
+# Phase 4: SHAP 해석성 분석
+python shap_analysis.py
+
+# Phase 5: 논문 보고서 생성
+python generate_paper_report.py
 ```
 
 ## 📁 파일 구조
@@ -85,28 +113,58 @@ python run_training.py full
 ```
 ver1/
 ├── src/
-│   ├── TABNET_ENHANCED_MODEL.py    # 메인 모델 코드
+│   ├── TABNET_ENHANCED_MODEL.py     # 메인 모델 코드
 │   └── ultra_quick_demo.py          # 빠른 테스트
-├── run_training.py                   # 실행 스크립트
-├── train.bat                         # Windows 실행
-├── check_cuda.py                     # GPU 확인
+│
+├── run_training.py                   # 모델 학습 스크립트
+├── QUICK_START.md                    # 빠른 시작 가이드 ⭐
+├── LOCAL_EXECUTION_GUIDE.md          # 상세 실행 가이드 ⭐
+│
+├── advanced_analysis.py              # Phase 1: 서브그룹 분석
+├── threshold_analysis.py             # Phase 2: 임계값 분석
+├── subgroup_modeling.py              # Phase 3: 그룹별 모델
+├── shap_analysis.py                  # Phase 4: SHAP 해석
+├── generate_paper_report.py          # Phase 5: 논문 생성
+│
+├── advanced_results/                 # 분석 결과
+│   ├── FINAL_PAPER_REPORT.md        # 논문 초안 ✅
+│   ├── threshold_analysis/          # 임계값 분석 결과 ✅
+│   ├── subgroup_models/             # 그룹별 모델
+│   └── shap_analysis/               # SHAP 결과
+│
 └── requirements.txt                  # 의존성
 ```
 
 ## 📚 관련 문서
 
+- **빠른 시작**: `QUICK_START.md` ⭐
+- **상세 가이드**: `LOCAL_EXECUTION_GUIDE.md` ⭐
+- **고급 분석**: `ADVANCED_ANALYSIS_README.md`
+- **논문 초안**: `advanced_results/FINAL_PAPER_REPORT.md` ✅
 - **분석 보고서**: `/docs/ANALYSIS_REPORT.md`
 - **입출력 설명**: `/docs/INPUT_OUTPUT_EXPLANATION.md`
 
-## 🔄 Ver2로의 발전
+## 📊 완료된 분석 결과
 
-Ver1의 한계를 극복하기 위해 **Ver2 (Longitudinal Analysis)**가 개발 중입니다.
+### ✅ Phase 1: 기본 서브그룹 분석
+- 연령/성별/BMI별 그룹 생성
+- 그룹별 통계 및 분포 시각화
+- 29,098명 데이터 분석 완료
 
-→ 식습관 **변화**가 건강지표 **변화**에 미치는 영향 분석
+### ✅ Phase 2: 임계값 분석
+- 4개 건강지표 (BMI, SBP, DBP, TG)
+- 위험도 분류 및 최적 임계값
+- 개인맞춤형 식습관 권고안
+- 16개 결과 파일 생성 완료
+
+### ⏳ Phase 3-4: 대기 중
+- 서브그룹 모델링: Ver1 모델 필요
+- SHAP 해석성 분석: Ver1 모델 필요
+- **로컬 PC에서 모델 학습 후 실행 가능**
 
 ---
 
-**작성일**: 2025-11-04  
+**작성일**: 2025-11-06 (업데이트)  
 **분석 유형**: Cross-sectional (횡단면)  
-**성능**: ⭐⭐⭐⭐⭐ Excellent  
-**상태**: ✅ 완료
+**성능**: ⭐⭐⭐⭐⭐ Excellent (R² 0.90)  
+**상태**: ✅ 기본 분석 완료, ⏳ 모델 학습 대기
