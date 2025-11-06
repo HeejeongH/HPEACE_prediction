@@ -164,7 +164,7 @@ class XGBoostChangePredictor:
         plt.title(f'{self.target_variable} 변화 예측 - 특성 중요도 (Top {top_n})', fontsize=14)
         plt.tight_layout()
         
-        output_path = f'../result/xgboost_{self.target_variable}_feature_importance.png'
+        output_path = f'./result/xgboost_{self.target_variable}_feature_importance.png'
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"\n   💾 특성 중요도 저장: {output_path}")
@@ -197,13 +197,13 @@ class XGBoostChangePredictor:
         axes[1].grid(True, alpha=0.3)
         
         plt.tight_layout()
-        output_path = f'../result/xgboost_{self.target_variable}_predictions.png'
+        output_path = f'./result/xgboost_{self.target_variable}_predictions.png'
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 예측 결과 저장: {output_path}")
         plt.close()
     
-    def save_model(self, output_dir='../result/models'):
+    def save_model(self, output_dir='./result/models'):
         """모델 저장"""
         os.makedirs(output_dir, exist_ok=True)
         
@@ -216,7 +216,7 @@ class XGBoostChangePredictor:
         print(f"\n   💾 모델 저장: {model_path}")
         print(f"   💾 스케일러 저장: {scaler_X_path}")
     
-    def load_model(self, model_dir='../result/models'):
+    def load_model(self, model_dir='./result/models'):
         """모델 로드"""
         model_path = os.path.join(model_dir, f'xgboost_{self.target_variable}.pkl')
         scaler_X_path = os.path.join(model_dir, f'scaler_X_{self.target_variable}.pkl')
@@ -284,7 +284,7 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
         print("\n", results_df.round(4))
         
         # 결과 저장
-        output_csv = '../result/xgboost_all_results.csv'
+        output_csv = './result/xgboost_all_results.csv'
         Path(output_csv).parent.mkdir(parents=True, exist_ok=True)
         results_df.to_csv(output_csv)
         print(f"\n💾 전체 결과 저장: {output_csv}")

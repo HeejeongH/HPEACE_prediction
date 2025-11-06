@@ -252,7 +252,7 @@ def calculate_derived_features(paired_df):
     return df
 
 
-def exploratory_data_analysis(paired_df, output_dir='../result'):
+def exploratory_data_analysis(paired_df, output_dir='./result'):
     """탐색적 데이터 분석 및 시각화"""
     import os
     os.makedirs(output_dir, exist_ok=True)

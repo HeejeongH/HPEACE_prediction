@@ -296,7 +296,7 @@ class LSTMModelWrapper:
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
         
-        output_path = f'../result/lstm_{self.target_variable}_learning_curve.png'
+        output_path = f'./result/lstm_{self.target_variable}_learning_curve.png'
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"\n   💾 학습 곡선 저장: {output_path}")
         plt.close()
@@ -332,12 +332,12 @@ class LSTMModelWrapper:
         axes[1].grid(True, alpha=0.3)
         
         plt.tight_layout()
-        output_path = f'../result/lstm_{self.target_variable}_predictions.png'
+        output_path = f'./result/lstm_{self.target_variable}_predictions.png'
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 예측 결과 저장: {output_path}")
         plt.close()
     
-    def save_model(self, output_dir='../result/models'):
+    def save_model(self, output_dir='./result/models'):
         """모델 저장"""
         os.makedirs(output_dir, exist_ok=True)
         
@@ -397,8 +397,8 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
     results_df = pd.DataFrame(results).T
     print("\n", results_df.round(4))
     
-    results_df.to_csv('../result/lstm_all_results.csv')
-    print(f"\n💾 전체 결과 저장: ../result/lstm_all_results.csv")
+    results_df.to_csv('./result/lstm_all_results.csv')
+    print(f"\n💾 전체 결과 저장: ./result/lstm_all_results.csv")
     
     return results_df
 

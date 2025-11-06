@@ -240,7 +240,7 @@ class TabNetChangePredictor:
             pass
         
         plt.tight_layout()
-        output_path = f'../result/tabnet_{self.target_variable}_learning_curve.png'
+        output_path = f'./result/tabnet_{self.target_variable}_learning_curve.png'
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"\n   💾 학습 곡선 저장: {output_path}")
@@ -272,7 +272,7 @@ class TabNetChangePredictor:
         plt.title('Top 10 특성 비율', fontsize=14)
         
         plt.tight_layout()
-        output_path = f'../result/tabnet_{self.target_variable}_feature_importance.png'
+        output_path = f'./result/tabnet_{self.target_variable}_feature_importance.png'
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 특성 중요도 저장: {output_path}")
@@ -305,7 +305,7 @@ class TabNetChangePredictor:
         axes[1].grid(True, alpha=0.3)
         
         plt.tight_layout()
-        output_path = f'../result/tabnet_{self.target_variable}_predictions.png'
+        output_path = f'./result/tabnet_{self.target_variable}_predictions.png'
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 예측 결과 저장: {output_path}")
@@ -355,7 +355,7 @@ class TabNetChangePredictor:
             plt.suptitle(f'{self.target_variable} TabNet Attention Masks', fontsize=16)
             plt.tight_layout()
             
-            output_path = f'../result/tabnet_{self.target_variable}_attention_masks.png'
+            output_path = f'./result/tabnet_{self.target_variable}_attention_masks.png'
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
             plt.savefig(output_path, dpi=150, bbox_inches='tight')
             print(f"   💾 Attention masks 저장: {output_path}")
@@ -365,7 +365,7 @@ class TabNetChangePredictor:
             print(f"   ⚠️  Attention masks 시각화 건너뜀: {str(e)}")
             plt.close('all')
     
-    def save_model(self, output_dir='../result/models'):
+    def save_model(self, output_dir='./result/models'):
         """모델 저장"""
         os.makedirs(output_dir, exist_ok=True)
         
@@ -374,7 +374,7 @@ class TabNetChangePredictor:
         
         print(f"\n   💾 모델 저장: {model_path}")
     
-    def load_model(self, model_dir='../result/models'):
+    def load_model(self, model_dir='./result/models'):
         """모델 로드"""
         model_path = os.path.join(model_dir, f'tabnet_{self.target_variable}.zip')
         
@@ -453,7 +453,7 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
         print("\n", results_df.round(4))
         
         # 결과 저장
-        output_csv = '../result/tabnet_all_results.csv'
+        output_csv = './result/tabnet_all_results.csv'
         Path(output_csv).parent.mkdir(parents=True, exist_ok=True)
         results_df.to_csv(output_csv)
         print(f"\n💾 전체 결과 저장: {output_csv}")
