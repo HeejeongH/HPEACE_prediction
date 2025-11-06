@@ -313,39 +313,57 @@ class TabNetChangePredictor:
     
     def plot_attention_masks(self, X_sample, sample_idx=0):
         """Attention mask 시각화 (TabNet의 핵심 특징)"""
-        # Explain 함수로 attention mask 추출
-        explain_matrix, masks = self.model.explain(X_sample[:10])  # 샘플 10개만
-        
-        fig, axes = plt.subplots(2, 5, figsize=(20, 8))
-        axes = axes.flatten()
-        
-        # masks shape: (n_samples, n_features) 또는 (n_steps, n_samples, n_features)
-        # 평균 attention 사용
-        if len(masks.shape) == 3:
-            # (n_steps, n_samples, n_features) -> (n_samples, n_features)
-            avg_masks = masks.mean(axis=0)
-        else:
-            avg_masks = masks
-        
-        for i in range(min(10, avg_masks.shape[0])):
-            mask = avg_masks[i]
+        try:
+            # Explain 함수로 attention mask 추출
+            explain_matrix, masks = self.model.explain(X_sample[:10])  # 샘플 10개만
             
-            # Mask를 특성별로 시각화
-            axes[i].barh(range(len(self.feature_names)), mask, height=0.8)
-            axes[i].set_yticks(range(len(self.feature_names)))
-            axes[i].set_yticklabels([name[:20] for name in self.feature_names], fontsize=8)
-            axes[i].set_xlabel('Attention', fontsize=10)
-            axes[i].set_title(f'Sample {i+1}', fontsize=12)
-            axes[i].grid(True, alpha=0.3, axis='x')
-        
-        plt.suptitle(f'{self.target_variable} TabNet Attention Masks', fontsize=16)
-        plt.tight_layout()
-        
-        output_path = f'../result/tabnet_{self.target_variable}_attention_masks.png'
-        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        print(f"   💾 Attention masks 저장: {output_path}")
-        plt.close()
+            # masks가 딕셔너리인 경우 처리
+            if isinstance(masks, dict):
+                # 딕셔너리에서 masks 데이터 추출
+                if 'masks' in masks:
+                    masks = masks['masks']
+                else:
+                    # 딕셔너리의 첫 번째 값 사용
+                    masks = list(masks.values())[0]
+            
+            # numpy array로 변환
+            if not isinstance(masks, np.ndarray):
+                masks = np.array(masks)
+            
+            fig, axes = plt.subplots(2, 5, figsize=(20, 8))
+            axes = axes.flatten()
+            
+            # masks shape: (n_samples, n_features) 또는 (n_steps, n_samples, n_features)
+            # 평균 attention 사용
+            if len(masks.shape) == 3:
+                # (n_steps, n_samples, n_features) -> (n_samples, n_features)
+                avg_masks = masks.mean(axis=0)
+            else:
+                avg_masks = masks
+            
+            for i in range(min(10, avg_masks.shape[0])):
+                mask = avg_masks[i]
+                
+                # Mask를 특성별로 시각화
+                axes[i].barh(range(len(self.feature_names)), mask, height=0.8)
+                axes[i].set_yticks(range(len(self.feature_names)))
+                axes[i].set_yticklabels([name[:20] for name in self.feature_names], fontsize=8)
+                axes[i].set_xlabel('Attention', fontsize=10)
+                axes[i].set_title(f'Sample {i+1}', fontsize=12)
+                axes[i].grid(True, alpha=0.3, axis='x')
+            
+            plt.suptitle(f'{self.target_variable} TabNet Attention Masks', fontsize=16)
+            plt.tight_layout()
+            
+            output_path = f'../result/tabnet_{self.target_variable}_attention_masks.png'
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            plt.savefig(output_path, dpi=150, bbox_inches='tight')
+            print(f"   💾 Attention masks 저장: {output_path}")
+            plt.close()
+            
+        except Exception as e:
+            print(f"   ⚠️  Attention masks 시각화 건너뜀: {str(e)}")
+            plt.close('all')
     
     def save_model(self, output_dir='../result/models'):
         """모델 저장"""
