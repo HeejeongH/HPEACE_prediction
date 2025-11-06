@@ -34,10 +34,19 @@ env/
 *.pth
 *.pt
 
-# Windows
+# Windows System Files (완전 차단)
 desktop.ini
+Desktop.ini
+DESKTOP.INI
+**/desktop.ini
+**/**/desktop.ini
+.git/refs/desktop.ini
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
 *.lnk
+*.stackdump
 
 # macOS
 .DS_Store
