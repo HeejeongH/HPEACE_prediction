@@ -20,12 +20,14 @@ def print_menu():
     print("🔬 Ver2: 종단 분석 (Longitudinal Change Prediction)")
     print("="*80)
     print("\n메뉴:")
-    print("  1. 데이터 전처리 (Paired Visits 생성)")
-    print("  2. TabNet 모델 학습 (Attention-based) ⭐")
+    print("  1. 데이터 전처리 (Paired Visits + 분류 타겟 생성)")
+    print("  2. TabNet 모델 학습 (Attention-based)")
     print("  3. XGBoost 모델 학습 (Baseline)")
     print("  4. LSTM 모델 학습 (Deep Learning)")
-    print("  5. 전체 실행 (1→2→3→4)")
-    print("  6. 결과 비교 (TabNet vs XGBoost vs LSTM)")
+    print("  5. 🚀 앙상블 분류 모델 학습 (RF + XGB + LGB) ⭐ 추천")
+    print("  6. 전체 실행 (회귀 모델: 1→2→3→4)")
+    print("  7. 결과 비교 (TabNet vs XGBoost vs LSTM)")
+    print("  8. 전체 실행 (분류 모델: 1→5) 🚀 최고 성능")
     print("  0. 종료")
     print("="*80)
 
@@ -133,10 +135,39 @@ def step4_lstm():
         return False
 
 
-def step5_full_pipeline():
-    """Step 5: 전체 파이프라인"""
+def step5_ensemble_classifier():
+    """Step 5: 앙상블 분류 모델 학습 (최고 성능!)"""
     print("\n" + "="*80)
-    print("🚀 전체 파이프라인 실행")
+    print("🎯 Step 5: 앙상블 분류 모델 학습")
+    print("="*80)
+    
+    # 전처리 데이터 확인
+    data_path = os.path.join(script_dir, '..', 'data', 'ver2_paired_visits.csv')
+    data_path = os.path.abspath(data_path)
+    
+    if not os.path.exists(data_path):
+        print(f"\n⚠️  전처리 데이터가 없습니다: {data_path}")
+        print("먼저 '1. 데이터 전처리'를 실행하세요.")
+        return False
+    
+    print(f"📂 데이터 로드: {data_path}")
+    
+    try:
+        from ensemble_classifier import train_all_targets
+        results = train_all_targets(data_path)
+        print("\n✅ 앙상블 분류 모델 학습 완료!")
+        return True
+    except Exception as e:
+        print(f"\n❌ 오류 발생: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def step6_full_pipeline():
+    """Step 6: 전체 파이프라인 (회귀 모델)"""
+    print("\n" + "="*80)
+    print("🚀 전체 파이프라인 실행 (회귀 모델)")
     print("="*80)
     
     # Step 1: 전처리
@@ -161,8 +192,28 @@ def step5_full_pipeline():
     return True
 
 
-def step6_compare_results():
-    """Step 6: 결과 비교"""
+def step8_classification_pipeline():
+    """Step 8: 분류 모델 파이프라인 (최고 성능!)"""
+    print("\n" + "="*80)
+    print("🚀 분류 모델 파이프라인 실행 (최고 성능 목표!)")
+    print("="*80)
+    
+    # Step 1: 전처리
+    if not step1_preprocessing():
+        return False
+    
+    # Step 5: 앙상블 분류 모델
+    if not step5_ensemble_classifier():
+        return False
+    
+    print("\n" + "="*80)
+    print("✅ 분류 모델 파이프라인 완료!")
+    print("="*80)
+    return True
+
+
+def step7_compare_results():
+    """Step 7: 결과 비교"""
     print("\n" + "="*80)
     print("📊 TabNet vs XGBoost vs LSTM 결과 비교")
     print("="*80)
@@ -284,7 +335,7 @@ def main():
         print_menu()
         
         try:
-            choice = input("\n선택 (0-6): ").strip()
+            choice = input("\n선택 (0-8): ").strip()
             
             if choice == '0':
                 print("\n👋 프로그램을 종료합니다.")
@@ -303,13 +354,19 @@ def main():
                 step4_lstm()
             
             elif choice == '5':
-                step5_full_pipeline()
+                step5_ensemble_classifier()
             
             elif choice == '6':
-                step6_compare_results()
+                step6_full_pipeline()
+            
+            elif choice == '7':
+                step7_compare_results()
+            
+            elif choice == '8':
+                step8_classification_pipeline()
             
             else:
-                print("\n⚠️  잘못된 선택입니다. 0-6 사이의 숫자를 입력하세요.")
+                print("\n⚠️  잘못된 선택입니다. 0-8 사이의 숫자를 입력하세요.")
             
             input("\n▶️  Enter를 눌러 계속...")
         

@@ -252,6 +252,72 @@ def calculate_derived_features(paired_df):
     return df
 
 
+def create_classification_targets(paired_df, thresholds=None):
+    """
+    분류 타겟 생성 (회귀 → 분류로 변환)
+    
+    Parameters:
+    -----------
+    paired_df : DataFrame
+        방문 쌍 데이터
+    thresholds : dict
+        각 건강지표별 분류 임계값
+        예: {'체중': 1.0, '체질량지수': 0.5, ...}
+    
+    Returns:
+    --------
+    df : DataFrame
+        분류 타겟이 추가된 데이터
+    """
+    print("\n" + "=" * 80)
+    print("🎯 분류 타겟 생성 (회귀 → 분류 변환)")
+    print("="  * 80)
+    
+    df = paired_df.copy()
+    
+    # 기본 임계값 설정
+    if thresholds is None:
+        thresholds = {
+            '체중': 1.0,              # ±1kg
+            '체질량지수': 0.5,         # ±0.5
+            '허리둘레(WAIST)': 2.0,    # ±2cm
+            'SBP': 5.0,               # ±5mmHg
+            'DBP': 3.0,               # ±3mmHg
+            'TG': 20.0                # ±20mg/dL
+        }
+    
+    classification_cols_added = 0
+    
+    for indicator, threshold in thresholds.items():
+        change_col = f'{indicator}_change'
+        class_col = f'{indicator}_class'
+        
+        if change_col in df.columns:
+            # 3-class 분류: 증가(2) / 유지(1) / 감소(0)
+            df[class_col] = pd.cut(
+                df[change_col],
+                bins=[-np.inf, -threshold, threshold, np.inf],
+                labels=[0, 1, 2]  # 0: 감소, 1: 유지, 2: 증가
+            ).astype(int)
+            
+            # 분포 확인
+            class_dist = df[class_col].value_counts().sort_index()
+            total = len(df[change_col].dropna())
+            
+            print(f"\n   📊 {indicator} 분류:")
+            print(f"      임계값: ±{threshold}")
+            print(f"      감소(0): {class_dist.get(0, 0):,}명 ({class_dist.get(0, 0)/total*100:.1f}%)")
+            print(f"      유지(1): {class_dist.get(1, 0):,}명 ({class_dist.get(1, 0)/total*100:.1f}%)")
+            print(f"      증가(2): {class_dist.get(2, 0):,}명 ({class_dist.get(2, 0)/total*100:.1f}%)")
+            
+            classification_cols_added += 1
+    
+    print(f"\n✅ 분류 타겟 생성 완료: {classification_cols_added}개")
+    print(f"   💡 모델 선택: 회귀(R²) vs 분류(Accuracy) 비교 가능")
+    
+    return df
+
+
 def exploratory_data_analysis(paired_df, output_dir='./result'):
     """탐색적 데이터 분석 및 시각화"""
     import os
@@ -382,6 +448,9 @@ def main():
     
     # 4. 파생 특성 생성
     paired_df = calculate_derived_features(paired_df)
+    
+    # 4.5. 분류 타겟 생성 (회귀 → 분류)
+    paired_df = create_classification_targets(paired_df)
     
     # 5. 탐색적 데이터 분석
     exploratory_data_analysis(paired_df, output_dir=result_dir)
