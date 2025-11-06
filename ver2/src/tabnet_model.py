@@ -20,6 +20,7 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from pathlib import Path
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -240,6 +241,7 @@ class TabNetChangePredictor:
         
         plt.tight_layout()
         output_path = f'../result/tabnet_{self.target_variable}_learning_curve.png'
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"\n   💾 학습 곡선 저장: {output_path}")
         plt.close()
@@ -271,6 +273,7 @@ class TabNetChangePredictor:
         
         plt.tight_layout()
         output_path = f'../result/tabnet_{self.target_variable}_feature_importance.png'
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 특성 중요도 저장: {output_path}")
         plt.close()
@@ -303,6 +306,7 @@ class TabNetChangePredictor:
         
         plt.tight_layout()
         output_path = f'../result/tabnet_{self.target_variable}_predictions.png'
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 예측 결과 저장: {output_path}")
         plt.close()
@@ -338,6 +342,7 @@ class TabNetChangePredictor:
         plt.tight_layout()
         
         output_path = f'../result/tabnet_{self.target_variable}_attention_masks.png'
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"   💾 Attention masks 저장: {output_path}")
         plt.close()
@@ -430,8 +435,10 @@ def train_all_targets(data_path='../data/ver2_paired_visits.csv'):
         print("\n", results_df.round(4))
         
         # 결과 저장
-        results_df.to_csv('../result/tabnet_all_results.csv')
-        print(f"\n💾 전체 결과 저장: ../result/tabnet_all_results.csv")
+        output_csv = '../result/tabnet_all_results.csv'
+        Path(output_csv).parent.mkdir(parents=True, exist_ok=True)
+        results_df.to_csv(output_csv)
+        print(f"\n💾 전체 결과 저장: {output_csv}")
     else:
         print("\n⚠️ 모든 지표에서 오류가 발생했습니다.")
         results_df = pd.DataFrame()
