@@ -50,12 +50,32 @@ class XGBoostChangePredictor:
                            if '_change' in col and '건강' not in col 
                            and not any(bio in col for bio in ['체중', '체질량지수', '허리둘레', 'SBP', 'DBP', 'TG'])]
         
-        # 2. ✅ 다른 건강지표 baseline 추가
-        health_indicators = ['체중', '체질량지수', '허리둘레(WAIST)', 'SBP', 'DBP', 'TG']
+        # 2. ✅ 다른 건강지표 baseline 추가 (독립적 지표만)
+        obesity_indicators = ['체중', '체질량지수', '허리둘레(WAIST)']
+        bp_indicators = ['SBP', 'DBP']
+        metabolic_indicators = ['TG']
+        
         other_health_baselines = []
         
-        for indicator in health_indicators:
-            if indicator != self.target_variable:
+        if self.target_variable in obesity_indicators:
+            for indicator in bp_indicators + metabolic_indicators:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in df.columns:
+                    other_health_baselines.append(baseline_col)
+        
+        elif self.target_variable in bp_indicators:
+            for indicator in obesity_indicators + metabolic_indicators:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in df.columns:
+                    other_health_baselines.append(baseline_col)
+            other_bp = [bp for bp in bp_indicators if bp != self.target_variable]
+            for indicator in other_bp:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in other_health_baselines:
+                    other_health_baselines.remove(baseline_col)
+        
+        elif self.target_variable in metabolic_indicators:
+            for indicator in obesity_indicators + bp_indicators:
                 baseline_col = f'{indicator}_baseline'
                 if baseline_col in df.columns:
                     other_health_baselines.append(baseline_col)

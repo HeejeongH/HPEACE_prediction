@@ -62,13 +62,39 @@ class TabNetChangePredictor:
                            if '_change' in col and '건강' not in col 
                            and not any(bio in col for bio in ['체중', '체질량지수', '허리둘레', 'SBP', 'DBP', 'TG'])]
         
-        # 2. ✅ 다른 건강지표 baseline 추가 (타겟의 baseline만 제외)
-        # 예: 체중 예측 시 → BMI_baseline, 허리_baseline, SBP_baseline, DBP_baseline, TG_baseline 사용
-        health_indicators = ['체중', '체질량지수', '허리둘레(WAIST)', 'SBP', 'DBP', 'TG']
+        # 2. ✅ 다른 건강지표 baseline 추가 (독립적 지표만 선택)
+        # ⚠️ 수학적/상관적으로 연결된 지표는 제외하여 Data Leakage 방지
+        
+        # 건강지표 그룹 정의
+        obesity_indicators = ['체중', '체질량지수', '허리둘레(WAIST)']  # 비만 관련 (서로 강한 상관)
+        bp_indicators = ['SBP', 'DBP']  # 혈압 관련 (서로 강한 상관)
+        metabolic_indicators = ['TG']  # 대사 관련 (독립적)
+        
         other_health_baselines = []
         
-        for indicator in health_indicators:
-            if indicator != self.target_variable:
+        # 타겟이 비만 지표인 경우 → 혈압, 대사 지표만 사용
+        if self.target_variable in obesity_indicators:
+            for indicator in bp_indicators + metabolic_indicators:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in df.columns:
+                    other_health_baselines.append(baseline_col)
+        
+        # 타겟이 혈압 지표인 경우 → 비만, 대사 지표 사용 (다른 혈압 제외)
+        elif self.target_variable in bp_indicators:
+            for indicator in obesity_indicators + metabolic_indicators:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in df.columns:
+                    other_health_baselines.append(baseline_col)
+            # 다른 혈압 지표 제외
+            other_bp = [bp for bp in bp_indicators if bp != self.target_variable]
+            for indicator in other_bp:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in other_health_baselines:
+                    other_health_baselines.remove(baseline_col)
+        
+        # 타겟이 대사 지표인 경우 → 모든 지표 사용 가능
+        elif self.target_variable in metabolic_indicators:
+            for indicator in obesity_indicators + bp_indicators:
                 baseline_col = f'{indicator}_baseline'
                 if baseline_col in df.columns:
                     other_health_baselines.append(baseline_col)
