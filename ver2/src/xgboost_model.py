@@ -40,16 +40,20 @@ class XGBoostChangePredictor:
         self.metrics = {}
         
     def prepare_data(self, df):
-        """데이터 준비: 특성과 타겟 분리"""
+        """데이터 준비: 특성과 타겟 분리 - Data Leakage 제거"""
         print(f"\n{'='*80}")
         print(f"📊 [{self.target_variable}] 데이터 준비")
         print(f"{'='*80}")
         
-        # 특성 선택: 식습관 변화 관련
-        diet_change_cols = [col for col in df.columns if '_change' in col and '건강' not in col]
+        # 특성 선택: 식습관 변화만 사용 (baseline 제거하여 leakage 방지)
+        # '_change'가 포함되어 있고, 건강지표가 아닌 컬럼들
+        diet_change_cols = [col for col in df.columns 
+                           if '_change' in col and '건강' not in col 
+                           and not any(bio in col for bio in ['체중', '체질량지수', '허리둘레', 'SBP', 'DBP', 'TG'])]
         
-        # 추가 특성: 시간 간격, 베이스라인 건강지표
-        additional_features = ['time_gap_days', f'{self.target_variable}_baseline']
+        # 추가 특성: 시간 간격만 사용
+        # ⚠️ baseline 제거: 타겟과 수학적으로 직접 연결되어 leakage 발생
+        additional_features = ['time_gap_days']
         
         # 전체 특성
         feature_cols = diet_change_cols + additional_features
@@ -66,8 +70,9 @@ class XGBoostChangePredictor:
         y = df_clean[target_col].values
         
         print(f"   ✅ 유효 샘플: {len(df_clean):,}개")
-        print(f"   ✅ 특성 개수: {len(feature_cols)}개")
+        print(f"   ✅ 특성 개수: {len(feature_cols)}개 (식습관 변화만)")
         print(f"   ✅ 타겟: {target_col}")
+        print(f"   ⚠️  Baseline 제거: Data leakage 방지")
         
         return X, y, df_clean
     
