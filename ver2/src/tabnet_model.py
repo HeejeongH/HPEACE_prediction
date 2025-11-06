@@ -52,48 +52,121 @@ class TabNetChangePredictor:
         print(f"\n   🖥️  사용 디바이스: {self.device}")
         
     def prepare_data(self, df):
-        """데이터 준비 - Data Leakage 제거"""
+        """데이터 준비 - 추가 특성 엔지니어링으로 성능 개선"""
         print(f"\n{'='*80}")
-        print(f"📊 [{self.target_variable}] 데이터 준비")
+        print(f"📊 [{self.target_variable}] 데이터 준비 (개선 버전)")
         print(f"{'='*80}")
         
-        # 특성 선택: 식습관 변화만 사용 (baseline 제거하여 leakage 방지)
-        # '_change'가 포함되어 있고, 건강지표가 아닌 컬럼들
+        # 1. 식습관 변화 특성
         diet_change_cols = [col for col in df.columns 
                            if '_change' in col and '건강' not in col 
                            and not any(bio in col for bio in ['체중', '체질량지수', '허리둘레', 'SBP', 'DBP', 'TG'])]
         
-        # 추가 특성: 시간 간격만 사용
-        # ⚠️ baseline 제거: 타겟과 수학적으로 직접 연결되어 leakage 발생
-        additional_features = ['time_gap_days']
+        # 2. ✅ 다른 건강지표 baseline 추가 (타겟의 baseline만 제외)
+        # 예: 체중 예측 시 → BMI_baseline, 허리_baseline, SBP_baseline, DBP_baseline, TG_baseline 사용
+        health_indicators = ['체중', '체질량지수', '허리둘레(WAIST)', 'SBP', 'DBP', 'TG']
+        other_health_baselines = []
         
-        # 전체 특성
-        feature_cols = diet_change_cols + additional_features
+        for indicator in health_indicators:
+            if indicator != self.target_variable:
+                baseline_col = f'{indicator}_baseline'
+                if baseline_col in df.columns:
+                    other_health_baselines.append(baseline_col)
+        
+        print(f"\n   📈 추가된 다른 건강지표 baseline: {len(other_health_baselines)}개")
+        for col in other_health_baselines:
+            print(f"      - {col}")
+        
+        # 3. ✅ 파생 특성 생성 (df_clean에 추가)
+        df_temp = df.copy()
+        
+        # BMI 카테고리 (baseline 기준)
+        if '체질량지수_baseline' in df_temp.columns:
+            df_temp['BMI_category'] = pd.cut(
+                df_temp['체질량지수_baseline'], 
+                bins=[0, 18.5, 23, 25, 30, 100],
+                labels=[0, 1, 2, 3, 4]  # 저체중, 정상, 과체중, 비만1, 비만2
+            ).astype(float)
+        
+        # 대사증후군 위험 점수 (baseline 기준)
+        metabolic_risk_score = 0
+        if '체질량지수_baseline' in df_temp.columns:
+            metabolic_risk_score += (df_temp['체질량지수_baseline'] >= 25).astype(int)
+        if 'SBP_baseline' in df_temp.columns:
+            metabolic_risk_score += (df_temp['SBP_baseline'] >= 130).astype(int)
+        if 'DBP_baseline' in df_temp.columns:
+            metabolic_risk_score += (df_temp['DBP_baseline'] >= 85).astype(int)
+        if 'TG_baseline' in df_temp.columns:
+            metabolic_risk_score += (df_temp['TG_baseline'] >= 150).astype(int)
+        
+        df_temp['metabolic_risk_score'] = metabolic_risk_score
+        
+        # 건강한 식습관 점수 (보호 식습관 증가 = 긍정적)
+        healthy_items = ['채소_change', '과일_change', '단백질류_change', '유제품_change', '곡류_change']
+        healthy_score = 0
+        for item in healthy_items:
+            if item in df_temp.columns:
+                healthy_score += df_temp[item]
+        df_temp['healthy_eating_score'] = healthy_score
+        
+        # 불건강한 식습관 점수 (위험 식습관 증가 = 부정적)
+        unhealthy_items = ['간식빈도_change', '고지방 육류_change', '단맛_change', 
+                          '음료류_change', '인스턴트 가공식품_change', '짠 간_change', 
+                          '짠 식습관_change', '튀김_change']
+        unhealthy_score = 0
+        for item in unhealthy_items:
+            if item in df_temp.columns:
+                unhealthy_score += df_temp[item]
+        df_temp['unhealthy_eating_score'] = unhealthy_score
+        
+        # 순 식습관 개선 점수
+        df_temp['net_diet_improvement'] = df_temp['healthy_eating_score'] - df_temp['unhealthy_eating_score']
+        
+        # 4. 전체 특성 목록
+        additional_features = ['time_gap_days']
+        derived_features = []
+        
+        # 파생 특성 추가
+        if 'BMI_category' in df_temp.columns:
+            derived_features.append('BMI_category')
+        if 'metabolic_risk_score' in df_temp.columns:
+            derived_features.append('metabolic_risk_score')
+        if 'healthy_eating_score' in df_temp.columns:
+            derived_features.append('healthy_eating_score')
+        if 'unhealthy_eating_score' in df_temp.columns:
+            derived_features.append('unhealthy_eating_score')
+        if 'net_diet_improvement' in df_temp.columns:
+            derived_features.append('net_diet_improvement')
+        
+        feature_cols = diet_change_cols + other_health_baselines + additional_features + derived_features
         self.feature_names = feature_cols
         
-        # 타겟: 건강지표 변화
+        # 타겟
         target_col = f'{self.target_variable}_change'
         
         # NaN 제거
-        valid_idx = df[feature_cols + [target_col]].notna().all(axis=1)
-        df_clean = df[valid_idx].copy()
+        valid_idx = df_temp[feature_cols + [target_col]].notna().all(axis=1)
+        df_clean = df_temp[valid_idx].copy()
         
         X = df_clean[feature_cols].values
         y = df_clean[target_col].values.reshape(-1, 1)
         
-        print(f"   ✅ 유효 샘플: {len(df_clean):,}개")
-        print(f"   ✅ 특성 개수: {len(feature_cols)}개 (식습관 변화만)")
+        print(f"\n   ✅ 유효 샘플: {len(df_clean):,}개")
+        print(f"   ✅ 총 특성 개수: {len(feature_cols)}개")
+        print(f"      - 식습관 변화: {len(diet_change_cols)}개")
+        print(f"      - 다른 건강지표 baseline: {len(other_health_baselines)}개")
+        print(f"      - 파생 특성: {len(derived_features)}개")
+        print(f"      - 기타: {len(additional_features)}개")
         print(f"   ✅ 타겟: {target_col}")
-        print(f"   ⚠️  Baseline 제거: Data leakage 방지")
         
-        # 🔍 CRITICAL: 특성 목록 상세 확인 (Leakage 검증)
+        # 🔍 특성 목록 상세 출력
         print(f"\n   🔍 사용된 특성 상세 목록 (총 {len(feature_cols)}개):")
         print("   " + "="*76)
         for i, col in enumerate(feature_cols, 1):
             print(f"      {i:2d}. {col}")
         print("   " + "="*76)
         
-        # CSV로 저장 (검증용)
+        # CSV 저장
         features_df = pd.DataFrame({
             'Feature_Index': range(1, len(feature_cols)+1),
             'Feature_Name': feature_cols
@@ -103,14 +176,14 @@ class TabNetChangePredictor:
         features_df.to_csv(features_csv, index=False, encoding='utf-8-sig')
         print(f"   💾 특성 목록 저장: {features_csv}")
         
-        # ⚠️ Baseline 제거 확인
-        baseline_cols = [col for col in feature_cols if 'baseline' in col.lower()]
-        if baseline_cols:
-            print(f"\n   ⚠️  WARNING: Baseline 특성 발견! (Data Leakage 위험)")
-            for col in baseline_cols:
-                print(f"      - {col}")
+        # ⚠️ Leakage 검증
+        target_baseline = f'{self.target_variable}_baseline'
+        if target_baseline in feature_cols:
+            print(f"\n   🚨 ERROR: 타겟의 baseline 발견! Data Leakage!")
+            print(f"      - {target_baseline}")
+            raise ValueError(f"Data Leakage detected: {target_baseline} in features")
         else:
-            print(f"\n   ✅ Baseline 특성 없음: Data Leakage 제거 확인")
+            print(f"\n   ✅ 타겟 baseline 없음: {target_baseline} 제외됨")
         
         return X, y, df_clean
     
