@@ -205,9 +205,11 @@ def create_advanced_features(df, available_vars):
     if all(var in df.columns for var in fiber_vars):
         df['fiber_intake'] = df['채소'] * 1.5 + df['과일'] * 1.3 + df['곡류'] * 0.8
     
-    if '체질량지수' in df.columns:
-        df['bmi_unhealthy_interaction'] = df['체질량지수'] * df['weighted_unhealthy_score']
-        df['bmi_sodium_interaction'] = df['체질량지수'] * df['sodium_risk_score']
+    # ❌ Data Leakage 방지: BMI 파생 특성 제거
+    # BMI는 체중/키²로 계산되므로, 체중 예측 시 사용하면 순환 논리 발생
+    # if '체질량지수' in df.columns:
+    #     df['bmi_unhealthy_interaction'] = df['체질량지수'] * df['weighted_unhealthy_score']
+    #     df['bmi_sodium_interaction'] = df['체질량지수'] * df['sodium_risk_score']
     
     if 'age' in df.columns:
         df['age_group'] = pd.cut(df['age'], bins=[0, 30, 45, 60, 100], labels=[1, 2, 3, 4])
