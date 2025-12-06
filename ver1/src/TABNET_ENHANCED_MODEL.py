@@ -393,12 +393,18 @@ def create_tabnet_model(X_train, y_train, X_test, y_test, use_optuna=True, n_tri
 class TabNetWrapper(BaseEstimator, RegressorMixin):
     """TabNet을 sklearn 스타일로 래핑"""
     
-    # sklearn이 regressor로 인식하도록 명시
-    _estimator_type = "regressor"
-    
     def __init__(self, tabnet_model=None):
         self.tabnet_model = tabnet_model
         self.model = tabnet_model
+    
+    def _more_tags(self):
+        """sklearn이 regressor로 인식하도록"""
+        return {'regressor': True}
+    
+    @property
+    def _estimator_type(self):
+        """sklearn의 check_estimator가 regressor로 인식"""
+        return "regressor"
     
     def fit(self, X, y):
         # TabNet 모델이 없으면 새로 생성 (clone 시)
@@ -450,6 +456,11 @@ class TabNetWrapper(BaseEstimator, RegressorMixin):
             self.tabnet_model = params["tabnet_model"]
             self.model = params["tabnet_model"]
         return self
+    
+    def score(self, X, y):
+        """sklearn 호환을 위한 score (R² 계산)"""
+        from sklearn.metrics import r2_score
+        return r2_score(y, self.predict(X))
 
 
 def create_tabnet_stacking_ensemble(X_train, y_train, X_test, y_test,
