@@ -392,6 +392,10 @@ def create_tabnet_model(X_train, y_train, X_test, y_test, use_optuna=True, n_tri
 
 class TabNetWrapper(BaseEstimator, RegressorMixin):
     """TabNet을 sklearn 스타일로 래핑"""
+    
+    # sklearn이 regressor로 인식하도록 명시
+    _estimator_type = "regressor"
+    
     def __init__(self, tabnet_model=None):
         self.tabnet_model = tabnet_model
         self.model = tabnet_model
