@@ -74,57 +74,56 @@ Row 3: [사람B_방문1] 식습관 → 건강지표
 
 ### 로컬 PC에서 실행 (추천)
 
-샌드박스 환경의 메모리 제약으로 **로컬 PC에서 실행을 권장**합니다.
-
 ```bash
-# 1. 빠른 시작 가이드
-QUICK_START.md 참고
+# 1. 패키지 설치
+pip install -r requirements.txt
 
-# 2. 안전 모드 실행 (60분)
+# 2. 안전 모드 실행 (추천, 약 60분)
 python run_training.py safe
 
 # 3. 전체 최적화 (2시간)
 python run_training.py full
-```
 
-**자세한 가이드**: `LOCAL_EXECUTION_GUIDE.md`
+# 4. TabNet만 사용
+python run_training.py tabnet
+
+# 5. 빠른 테스트 (5분)
+python run_training.py quick
+```
 
 ### 고급 분석 (모델 생성 후)
 
 ```bash
 # Phase 1: 서브그룹 분석
-python advanced_analysis.py
+python analysis/advanced_analysis.py
 
 # Phase 2: 임계값 분석 (완료됨)
-python threshold_analysis.py
+python analysis/threshold_analysis.py
 
 # Phase 3: 서브그룹 모델링
-python subgroup_modeling.py
+python analysis/subgroup_modeling.py
 
 # Phase 4: SHAP 해석성 분석
-python shap_analysis.py
+python analysis/shap_analysis.py
 
 # Phase 5: 논문 보고서 생성
-python generate_paper_report.py
+python analysis/generate_paper_report.py
 ```
 
 ## 📁 파일 구조
 
 ```
 ver1/
-├── src/
-│   ├── TABNET_ENHANCED_MODEL.py     # 메인 모델 코드
-│   └── ultra_quick_demo.py          # 빠른 테스트
+├── src/                              # 핵심 모델 코드
+│   ├── TABNET_ENHANCED_MODEL.py     # 메인 TabNet 모델
+│   └── ultra_quick_demo.py          # 빠른 테스트 스크립트
 │
-├── run_training.py                   # 모델 학습 스크립트
-├── QUICK_START.md                    # 빠른 시작 가이드 ⭐
-├── LOCAL_EXECUTION_GUIDE.md          # 상세 실행 가이드 ⭐
-│
-├── advanced_analysis.py              # Phase 1: 서브그룹 분석
-├── threshold_analysis.py             # Phase 2: 임계값 분석
-├── subgroup_modeling.py              # Phase 3: 그룹별 모델
-├── shap_analysis.py                  # Phase 4: SHAP 해석
-├── generate_paper_report.py          # Phase 5: 논문 생성
+├── analysis/                         # 분석 스크립트
+│   ├── advanced_analysis.py         # Phase 1: 서브그룹 분석
+│   ├── threshold_analysis.py        # Phase 2: 임계값 분석
+│   ├── subgroup_modeling.py         # Phase 3: 그룹별 모델
+│   ├── shap_analysis.py             # Phase 4: SHAP 해석
+│   └── generate_paper_report.py     # Phase 5: 논문 생성
 │
 ├── advanced_results/                 # 분석 결과
 │   ├── FINAL_PAPER_REPORT.md        # 논문 초안 ✅
@@ -132,14 +131,13 @@ ver1/
 │   ├── subgroup_models/             # 그룹별 모델
 │   └── shap_analysis/               # SHAP 결과
 │
-└── requirements.txt                  # 의존성
+├── run_training.py                   # 메인 실행 스크립트
+├── README.md                         # 이 문서
+└── requirements.txt                  # 의존성 목록
 ```
 
 ## 📚 관련 문서
 
-- **빠른 시작**: `QUICK_START.md` ⭐
-- **상세 가이드**: `LOCAL_EXECUTION_GUIDE.md` ⭐
-- **고급 분석**: `ADVANCED_ANALYSIS_README.md`
 - **논문 초안**: `advanced_results/FINAL_PAPER_REPORT.md` ✅
 - **분석 보고서**: `/docs/ANALYSIS_REPORT.md`
 - **입출력 설명**: `/docs/INPUT_OUTPUT_EXPLANATION.md`
