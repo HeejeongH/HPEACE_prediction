@@ -466,6 +466,46 @@ class MetSPredictor:
         )
         
         print(f"\n💾 모델 저장 완료: {save_dir}")
+    
+    def load_model(self, load_dir: str):
+        """저장된 모델 로드"""
+        import os
+        
+        print(f"\n📂 모델 로드 중: {load_dir}")
+        
+        # TabNet 로드
+        tabnet_path = os.path.join(load_dir, 'tabnet_classifier.zip')
+        if os.path.exists(tabnet_path):
+            n_classes = len(self.class_names)
+            self.models['TabNet'] = self.build_tabnet_classifier(n_classes)
+            self.models['TabNet'].load_model(tabnet_path.replace('.zip', ''))
+            print("   ✅ TabNet 로드 완료")
+        
+        # 다른 모델들 로드
+        model_files = {
+            'XGBoost': 'xgboost_classifier.pkl',
+            'LightGBM': 'lightgbm_classifier.pkl',
+            'CatBoost': 'catboost_classifier.pkl'
+        }
+        
+        for name, filename in model_files.items():
+            filepath = os.path.join(load_dir, filename)
+            if os.path.exists(filepath):
+                self.models[name] = joblib.load(filepath)
+                print(f"   ✅ {name} 로드 완료")
+        
+        # Scaler 및 Label Encoder 로드
+        self.scaler = joblib.load(os.path.join(load_dir, 'scaler.pkl'))
+        self.label_encoder = joblib.load(os.path.join(load_dir, 'label_encoder.pkl'))
+        print("   ✅ Scaler, Label Encoder 로드 완료")
+        
+        # Feature importance 로드
+        feature_imp_path = os.path.join(load_dir, 'feature_importance.csv')
+        if os.path.exists(feature_imp_path):
+            self.feature_importances = pd.read_csv(feature_imp_path)
+            print("   ✅ Feature Importance 로드 완료")
+        
+        print(f"✅ 모델 로드 완료: {len(self.models)}개 모델")
 
 
 if __name__ == "__main__":
