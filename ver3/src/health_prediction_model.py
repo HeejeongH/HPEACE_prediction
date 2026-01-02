@@ -120,12 +120,21 @@ class HealthIndicatorPredictor:
         # 특성 데이터 생성
         X = df[feature_cols].copy()
         
-        # 범주형 변수 인코딩 (sex)
+        # 범주형 변수 처리
+        categorical_cols = X.select_dtypes(include=['object', 'category']).columns
+        
+        # sex 인코딩
         if 'sex' in X.columns:
             X['sex'] = X['sex'].map({'M': 1, 'F': 0})
         
-        # 결측치 처리
-        X = X.fillna(X.median())
+        # 나머지 범주형 변수 제거 (BMI 카테고리 등)
+        for col in categorical_cols:
+            if col in X.columns and col != 'sex':
+                X = X.drop(columns=[col])
+        
+        # 결측치 처리 (수치형만)
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        X[numeric_cols] = X[numeric_cols].fillna(X[numeric_cols].median())
         
         return X, y, feature_cols
     
