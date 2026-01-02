@@ -250,8 +250,8 @@ class HealthIndicatorPredictor:
         print(f"\n   📊 Training TabNet...")
         tabnet = self.build_tabnet_model(X_train.shape[1])
         tabnet.fit(
-            X_train_scaled, y_train.values,
-            eval_set=[(X_test_scaled, y_test.values)],
+            X_train_scaled, y_train.values.reshape(-1, 1),
+            eval_set=[(X_test_scaled, y_test.values.reshape(-1, 1))],
             max_epochs=100,
             patience=20,
             batch_size=256,
@@ -260,8 +260,8 @@ class HealthIndicatorPredictor:
         )
         
         models['TabNet'] = tabnet
-        predictions_train['TabNet'] = tabnet.predict(X_train_scaled)
-        predictions_test['TabNet'] = tabnet.predict(X_test_scaled)
+        predictions_train['TabNet'] = tabnet.predict(X_train_scaled).flatten()
+        predictions_test['TabNet'] = tabnet.predict(X_test_scaled).flatten()
         
         tabnet_r2 = r2_score(y_test, predictions_test['TabNet'])
         tabnet_rmse = np.sqrt(mean_squared_error(y_test, predictions_test['TabNet']))
@@ -468,7 +468,7 @@ class HealthIndicatorPredictor:
             final_pred = self.models[target]['Stacking'].predict(meta_features)
         else:
             # TabNet만 사용
-            final_pred = self.models[target]['TabNet'].predict(X_scaled)
+            final_pred = self.models[target]['TabNet'].predict(X_scaled).flatten()
         
         return final_pred
     
