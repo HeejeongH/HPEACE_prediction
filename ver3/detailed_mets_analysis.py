@@ -107,7 +107,7 @@ def load_model_and_predict(df):
     
     # 예측
     predictor = MetSPredictor()
-    predictor.load_models(latest_model_dir)
+    predictor.load_model(latest_model_dir)
     
     y_pred, y_prob = predictor.predict(df)
     
