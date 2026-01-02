@@ -14,6 +14,7 @@ Ver3: 전체 파이프라인 실행 스크립트
 import sys
 import os
 from datetime import datetime
+from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
