@@ -79,6 +79,14 @@ class PairedVisitPreprocessor:
         print(f"✅ 참여자 수: {df.index.nunique():,}명")
         print(f"✅ 변수 수: {len(df.columns)}개")
         
+        # 실제 데이터에 있는 건강지표만 사용
+        available_health_vars = [var for var in self.health_vars if var in df.columns]
+        if len(available_health_vars) < len(self.health_vars):
+            missing = set(self.health_vars) - set(available_health_vars)
+            print(f"\n⚠️ 경고: 다음 변수가 데이터에 없습니다: {missing}")
+            print(f"   사용 가능한 건강지표: {available_health_vars}")
+            self.health_vars = available_health_vars
+        
         return df
     
     def analyze_visit_patterns(self, df: pd.DataFrame) -> pd.Series:
@@ -237,12 +245,12 @@ class PairedVisitPreprocessor:
         """
         MetS (대사증후군) 진단
         
-        5개 기준 중 3개 이상 충족 시 MetS
+        사용 가능한 기준으로 진단 (3개 이상 충족 시 MetS)
         1. 복부비만 (허리둘레: 남 ≥90cm, 여 ≥85cm)
         2. 고중성지방 (TG ≥150 mg/dL)
-        3. 낮은 HDL (남 <40 mg/dL, 여 <50 mg/dL)
+        3. 낮은 HDL (남 <40 mg/dL, 여 <50 mg/dL) - 선택적
         4. 고혈압 (SBP ≥130 or DBP ≥85 mmHg)
-        5. 고혈당 (glucose ≥100 mg/dL)
+        5. 고혈당 (glucose ≥100 mg/dL) - 선택적
         """
         print("\n" + "=" * 80)
         print("🏥 MetS (대사증후군) 진단")
@@ -250,105 +258,121 @@ class PairedVisitPreprocessor:
         
         df = df.copy()
         
-        # Baseline MetS 진단
-        df['mets_waist_baseline'] = 0
-        df['mets_tg_baseline'] = 0
-        df['mets_hdl_baseline'] = 0
-        df['mets_bp_baseline'] = 0
-        df['mets_glucose_baseline'] = 0
+        # 사용 가능한 기준 확인
+        available_criteria = []
+        mets_components = []
         
-        # 1. 복부비만
         male_mask = df['sex'] == 'M'
         female_mask = df['sex'] == 'F'
         
-        df.loc[male_mask, 'mets_waist_baseline'] = (
-            df.loc[male_mask, '허리둘레(WAIST)_baseline'] >= self.mets_criteria['허리둘레(WAIST)']['M']
-        ).astype(int)
-        
-        df.loc[female_mask, 'mets_waist_baseline'] = (
-            df.loc[female_mask, '허리둘레(WAIST)_baseline'] >= self.mets_criteria['허리둘레(WAIST)']['F']
-        ).astype(int)
+        # 1. 복부비만
+        if '허리둘레(WAIST)_baseline' in df.columns:
+            df['mets_waist_baseline'] = 0
+            df.loc[male_mask, 'mets_waist_baseline'] = (
+                df.loc[male_mask, '허리둘레(WAIST)_baseline'] >= self.mets_criteria['허리둘레(WAIST)']['M']
+            ).astype(int)
+            df.loc[female_mask, 'mets_waist_baseline'] = (
+                df.loc[female_mask, '허리둘레(WAIST)_baseline'] >= self.mets_criteria['허리둘레(WAIST)']['F']
+            ).astype(int)
+            available_criteria.append('허리둘레')
+            mets_components.append('mets_waist_baseline')
         
         # 2. 고중성지방
-        df['mets_tg_baseline'] = (df['TG_baseline'] >= self.mets_criteria['TG']).astype(int)
+        if 'TG_baseline' in df.columns:
+            df['mets_tg_baseline'] = (df['TG_baseline'] >= self.mets_criteria['TG']).astype(int)
+            available_criteria.append('TG')
+            mets_components.append('mets_tg_baseline')
         
-        # 3. 낮은 HDL
-        df.loc[male_mask, 'mets_hdl_baseline'] = (
-            df.loc[male_mask, 'HDL_baseline'] < self.mets_criteria['HDL']['M']
-        ).astype(int)
-        
-        df.loc[female_mask, 'mets_hdl_baseline'] = (
-            df.loc[female_mask, 'HDL_baseline'] < self.mets_criteria['HDL']['F']
-        ).astype(int)
+        # 3. 낮은 HDL (선택적)
+        if 'HDL_baseline' in df.columns:
+            df['mets_hdl_baseline'] = 0
+            df.loc[male_mask, 'mets_hdl_baseline'] = (
+                df.loc[male_mask, 'HDL_baseline'] < self.mets_criteria['HDL']['M']
+            ).astype(int)
+            df.loc[female_mask, 'mets_hdl_baseline'] = (
+                df.loc[female_mask, 'HDL_baseline'] < self.mets_criteria['HDL']['F']
+            ).astype(int)
+            available_criteria.append('HDL')
+            mets_components.append('mets_hdl_baseline')
         
         # 4. 고혈압
-        df['mets_bp_baseline'] = (
-            (df['SBP_baseline'] >= self.mets_criteria['SBP']) |
-            (df['DBP_baseline'] >= self.mets_criteria['DBP'])
-        ).astype(int)
+        if 'SBP_baseline' in df.columns and 'DBP_baseline' in df.columns:
+            df['mets_bp_baseline'] = (
+                (df['SBP_baseline'] >= self.mets_criteria['SBP']) |
+                (df['DBP_baseline'] >= self.mets_criteria['DBP'])
+            ).astype(int)
+            available_criteria.append('혈압')
+            mets_components.append('mets_bp_baseline')
         
-        # 5. 고혈당
-        df['mets_glucose_baseline'] = (
-            df['glucose_baseline'] >= self.mets_criteria['glucose']
-        ).astype(int)
+        # 5. 고혈당 (선택적)
+        if 'glucose_baseline' in df.columns:
+            df['mets_glucose_baseline'] = (
+                df['glucose_baseline'] >= self.mets_criteria['glucose']
+            ).astype(int)
+            available_criteria.append('glucose')
+            mets_components.append('mets_glucose_baseline')
         
-        # MetS 개수 및 진단
-        df['mets_count_baseline'] = (
-            df['mets_waist_baseline'] +
-            df['mets_tg_baseline'] +
-            df['mets_hdl_baseline'] +
-            df['mets_bp_baseline'] +
-            df['mets_glucose_baseline']
-        )
+        print(f"\n📊 사용 가능한 MetS 기준: {available_criteria} ({len(available_criteria)}개)")
         
+        if len(available_criteria) < 3:
+            print(f"\n⚠️ 경고: MetS 진단에 필요한 최소 기준(3개) 미달")
+            print(f"   MetS 분석을 건너뜁니다.")
+            df['mets_diagnosis_baseline'] = 0
+            df['mets_diagnosis_followup'] = 0
+            df['mets_transition'] = 'insufficient_data'
+            return df
+        
+        # MetS 개수 및 진단 (baseline)
+        df['mets_count_baseline'] = df[mets_components].sum(axis=1)
         df['mets_diagnosis_baseline'] = (df['mets_count_baseline'] >= 3).astype(int)
         
         # Follow-up MetS 진단 (baseline + change)
-        df['허리둘레(WAIST)_followup'] = df['허리둘레(WAIST)_baseline'] + df['허리둘레(WAIST)_change']
-        df['TG_followup'] = df['TG_baseline'] + df['TG_change']
-        df['HDL_followup'] = df['HDL_baseline'] + df['HDL_change']
-        df['SBP_followup'] = df['SBP_baseline'] + df['SBP_change']
-        df['DBP_followup'] = df['DBP_baseline'] + df['DBP_change']
-        df['glucose_followup'] = df['glucose_baseline'] + df['glucose_change']
+        followup_components = []
         
-        df['mets_waist_followup'] = 0
-        df['mets_hdl_followup'] = 0
+        if '허리둘레(WAIST)_baseline' in df.columns:
+            df['허리둘레(WAIST)_followup'] = df['허리둘레(WAIST)_baseline'] + df['허리둘레(WAIST)_change']
+            df['mets_waist_followup'] = 0
+            df.loc[male_mask, 'mets_waist_followup'] = (
+                df.loc[male_mask, '허리둘레(WAIST)_followup'] >= self.mets_criteria['허리둘레(WAIST)']['M']
+            ).astype(int)
+            df.loc[female_mask, 'mets_waist_followup'] = (
+                df.loc[female_mask, '허리둘레(WAIST)_followup'] >= self.mets_criteria['허리둘레(WAIST)']['F']
+            ).astype(int)
+            followup_components.append('mets_waist_followup')
         
-        df.loc[male_mask, 'mets_waist_followup'] = (
-            df.loc[male_mask, '허리둘레(WAIST)_followup'] >= self.mets_criteria['허리둘레(WAIST)']['M']
-        ).astype(int)
+        if 'TG_baseline' in df.columns:
+            df['TG_followup'] = df['TG_baseline'] + df['TG_change']
+            df['mets_tg_followup'] = (df['TG_followup'] >= self.mets_criteria['TG']).astype(int)
+            followup_components.append('mets_tg_followup')
         
-        df.loc[female_mask, 'mets_waist_followup'] = (
-            df.loc[female_mask, '허리둘레(WAIST)_followup'] >= self.mets_criteria['허리둘레(WAIST)']['F']
-        ).astype(int)
+        if 'HDL_baseline' in df.columns:
+            df['HDL_followup'] = df['HDL_baseline'] + df['HDL_change']
+            df['mets_hdl_followup'] = 0
+            df.loc[male_mask, 'mets_hdl_followup'] = (
+                df.loc[male_mask, 'HDL_followup'] < self.mets_criteria['HDL']['M']
+            ).astype(int)
+            df.loc[female_mask, 'mets_hdl_followup'] = (
+                df.loc[female_mask, 'HDL_followup'] < self.mets_criteria['HDL']['F']
+            ).astype(int)
+            followup_components.append('mets_hdl_followup')
         
-        df['mets_tg_followup'] = (df['TG_followup'] >= self.mets_criteria['TG']).astype(int)
+        if 'SBP_baseline' in df.columns and 'DBP_baseline' in df.columns:
+            df['SBP_followup'] = df['SBP_baseline'] + df['SBP_change']
+            df['DBP_followup'] = df['DBP_baseline'] + df['DBP_change']
+            df['mets_bp_followup'] = (
+                (df['SBP_followup'] >= self.mets_criteria['SBP']) |
+                (df['DBP_followup'] >= self.mets_criteria['DBP'])
+            ).astype(int)
+            followup_components.append('mets_bp_followup')
         
-        df.loc[male_mask, 'mets_hdl_followup'] = (
-            df.loc[male_mask, 'HDL_followup'] < self.mets_criteria['HDL']['M']
-        ).astype(int)
+        if 'glucose_baseline' in df.columns:
+            df['glucose_followup'] = df['glucose_baseline'] + df['glucose_change']
+            df['mets_glucose_followup'] = (
+                df['glucose_followup'] >= self.mets_criteria['glucose']
+            ).astype(int)
+            followup_components.append('mets_glucose_followup')
         
-        df.loc[female_mask, 'mets_hdl_followup'] = (
-            df.loc[female_mask, 'HDL_followup'] < self.mets_criteria['HDL']['F']
-        ).astype(int)
-        
-        df['mets_bp_followup'] = (
-            (df['SBP_followup'] >= self.mets_criteria['SBP']) |
-            (df['DBP_followup'] >= self.mets_criteria['DBP'])
-        ).astype(int)
-        
-        df['mets_glucose_followup'] = (
-            df['glucose_followup'] >= self.mets_criteria['glucose']
-        ).astype(int)
-        
-        df['mets_count_followup'] = (
-            df['mets_waist_followup'] +
-            df['mets_tg_followup'] +
-            df['mets_hdl_followup'] +
-            df['mets_bp_followup'] +
-            df['mets_glucose_followup']
-        )
-        
+        df['mets_count_followup'] = df[followup_components].sum(axis=1)
         df['mets_diagnosis_followup'] = (df['mets_count_followup'] >= 3).astype(int)
         
         # MetS 변화 분류
