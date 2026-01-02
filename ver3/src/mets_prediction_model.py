@@ -132,7 +132,10 @@ class MetSPredictor:
         numeric_cols = X.select_dtypes(include=[np.number]).columns
         X[numeric_cols] = X[numeric_cols].fillna(X[numeric_cols].median())
         
-        return X, y, feature_cols
+        # 최종 feature 이름 업데이트
+        final_feature_names = X.columns.tolist()
+        
+        return X, y, final_feature_names
     
     def build_tabnet_classifier(self, n_classes: int) -> TabNetClassifier:
         """TabNet 분류 모델 생성"""
