@@ -54,3 +54,19 @@ ehthumbs_vista.db
 .LSOverride
 old/ 
 # Old files (too large for GitHub) 
+
+# Analysis notebooks (temporary)
+data/*.ipynb
+result/**/*.ipynb
+
+# Backup files
+*.backup
+*.bak
+
+# Large data files
+data/*.xlsx
+data/*.csv
+
+# Result caches
+result/best_combo/*.pkl
+result/optuna_study/*.pkl
