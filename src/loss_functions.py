@@ -74,3 +74,85 @@ def loss_methods_configs(train_loaders, disease_name, device):
         'WeightedCE_log': nn.CrossEntropyLoss(weight=torch.tensor(calculate_class_weights(train_loader)).float().to(device)),
     }
     return loss_configs
+def calculate_improved_class_weights(train_loader, method='inverse_freq'):
+    """개선된 클래스 가중치 계산
+    
+    Args:
+        train_loader: 학습 데이터 로더
+        method: 'inverse_freq', 'effective_num', 'balanced'
+    
+    Returns:
+        class_weights: 클래스 가중치 리스트
+    """
+    class_counts = np.zeros(3)
+    
+    for batch in train_loader:
+        targets = batch['target'].numpy().flatten()
+        for t in targets:
+            class_counts[t] += 1
+    
+    total = class_counts.sum()
+    
+    if method == 'inverse_freq':
+        # 역빈도 가중치 (더 강한 불균형 보정)
+        class_weights = total / (3 * class_counts + 1e-6)
+        class_weights = class_weights / class_weights.sum() * 3  # 정규화
+    
+    elif method == 'effective_num':
+        # Effective Number of Samples 기반
+        beta = 0.9999
+        effective_num = 1.0 - np.power(beta, class_counts)
+        class_weights = (1.0 - beta) / (effective_num + 1e-6)
+        class_weights = class_weights / class_weights.sum() * 3
+    
+    elif method == 'balanced':
+        # Sklearn 스타일 balanced 가중치
+        class_weights = total / (3 * class_counts)
+    
+    else:
+        raise ValueError(f"Unknown method: {method}")
+    
+    print(f"\n클래스 가중치 계산 ({method}):")
+    print(f"  클래스 분포: {class_counts.astype(int)}")
+    print(f"  클래스 비율: {(class_counts/total*100).round(2)}%")
+    print(f"  가중치: {class_weights.round(4)}")
+    
+    return class_weights.tolist()
+
+def improved_loss_methods_configs(train_loaders, disease_name, device):
+    """개선된 Loss 설정 (성능 향상 버전)"""
+    train_loader = train_loaders[disease_name]
+    
+    # 개선된 클래스 가중치 계산
+    weights_inverse = calculate_improved_class_weights(train_loader, 'inverse_freq')
+    weights_effective = calculate_improved_class_weights(train_loader, 'effective_num')
+    weights_balanced = calculate_improved_class_weights(train_loader, 'balanced')
+    
+    loss_configs = {
+        # 기존 (비교용)
+        'CrossEntropy': nn.CrossEntropyLoss(),
+        'FocalLoss_gamma1.5': FocalLoss(gamma=1.5),
+        
+        # 개선된 Focal Loss (gamma 증가)
+        'FocalLoss_gamma2.0': FocalLoss(gamma=2.0),
+        'FocalLoss_gamma2.5': FocalLoss(gamma=2.5),
+        
+        # 개선된 가중치 적용
+        'WeightedCE_inverse': nn.CrossEntropyLoss(
+            weight=torch.tensor(weights_inverse).float().to(device)
+        ),
+        'WeightedCE_effective': nn.CrossEntropyLoss(
+            weight=torch.tensor(weights_effective).float().to(device)
+        ),
+        'WeightedCE_balanced': nn.CrossEntropyLoss(
+            weight=torch.tensor(weights_balanced).float().to(device)
+        ),
+        
+        # Focal Loss + 가중치 조합
+        'FocalLoss_gamma2.0_weighted': FocalLoss(
+            alpha=weights_inverse, 
+            gamma=2.0
+        ),
+    }
+    
+    return loss_configs
