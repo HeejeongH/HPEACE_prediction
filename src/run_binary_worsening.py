@@ -1,15 +1,19 @@
 """
-2-Class 예측 모델 실행 스크립트
+2-Class 악화 예측 모델 실행 스크립트
 
-목적: 대사증후군 질병의 변화를 예측하는 2-class 모델 학습 및 평가
-- Class 0: 유지 (질병 상태 변화 없음)
-- Class 1: 변화 (개선 또는 악화)
+목적: 대사증후군 질병의 악화를 예측하는 2-class 모델 학습 및 평가
+- Class 0: 비악화 (개선 + 유지)
+- Class 1: 악화
+
+임상적 의미:
+- 악화를 조기에 감지하여 예방적 개입 가능
+- 고위험군 식별 및 관리
 
 실행 방법:
-    python run_binary_model.py
+    python run_binary_worsening.py
 
 결과 저장 위치:
-    ../result/binary_model/
+    ../result/binary_worsening/
 """
 
 import os
@@ -39,7 +43,7 @@ print(f"🚀 Device: {device}")
 print("=" * 80)
 
 # 저장 디렉토리 생성
-save_dir = '../result/binary_model'
+save_dir = '../result/binary_worsening'
 os.makedirs(save_dir, exist_ok=True)
 
 print("📊 Step 1: 데이터 준비")
@@ -76,21 +80,22 @@ disease_names = [
     'Decreased HDL-C'
 ]
 
-print("🔄 Step 2: 2-Class 타겟 변환 및 클래스 분포 확인")
+print("🔄 Step 2: 2-Class 타겟 변환 (악화 예측)")
 print("-" * 80)
 
-# 2-class 타겟 변환 (악화 예측)
-print("\n🎯 타겟 타입: 악화 예측 (Worsening Prediction)")
+print("\n🎯 타겟 정의:")
 print("   - Class 0: 비악화 (개선 + 유지)")
 print("   - Class 1: 악화")
-print("   → 임상적 의미: 악화를 조기에 감지하여 개입 가능\n")
+print("   → 임상적 의미: 악화를 조기에 감지하여 예방적 개입 가능")
+print()
 
+# 2-class 타겟 변환 (악화 예측)
 final_train = convert_to_binary_targets(final_train, disease_names, target_type='worsening')
 final_val = convert_to_binary_targets(final_val, disease_names, target_type='worsening')
 final_test = convert_to_binary_targets(final_test, disease_names, target_type='worsening')
 
 # 클래스 분포 확인
-print("📊 2-Class 클래스 분포 (악화 예측):")
+print("📊 클래스 분포:")
 for disease in disease_names:
     target_col = f'{disease}_delta'
     if target_col in final_train.columns:
@@ -102,9 +107,16 @@ for disease in disease_names:
         imbalance_ratio = no_worsening / worsening if worsening > 0 else float('inf')
         
         print(f"\n{disease}:")
-        print(f"  - 비악화(0): {no_worsening} ({no_worsening/total*100:.1f}%)")
-        print(f"  - 악화(1): {worsening} ({worsening/total*100:.1f}%)")
-        print(f"  - 불균형 비율: {imbalance_ratio:.1f}:1")
+        print(f"  - 비악화(0): {no_worsening:5d} ({no_worsening/total*100:5.1f}%)")
+        print(f"  - 악화(1):   {worsening:5d} ({worsening/total*100:5.1f}%)")
+        print(f"  - 불균형 비율: {imbalance_ratio:.1f}:1", end="")
+        
+        if imbalance_ratio < 5:
+            print(" ✅ 양호")
+        elif imbalance_ratio < 7:
+            print(" ⚠️ 보통")
+        else:
+            print(" 🔴 심각")
 
 print()
 
@@ -130,7 +142,7 @@ print("-" * 80)
 
 # 하이퍼파라미터 설정
 hyperparams = {
-    'hidden_dim': 64,
+    'hidden_dim': 128,  # 64 → 128로 증가
     'dropout_rate': 0.3,
     'lr': 1e-4,
     'weight_decay': 6e-4,
@@ -207,7 +219,7 @@ for idx, disease in enumerate(disease_names, 1):
 
 print()
 print("=" * 80)
-print("📈 최종 결과 요약")
+print("📈 최종 결과 요약 (악화 예측)")
 print("=" * 80)
 
 # 평균 성능 계산
@@ -260,7 +272,8 @@ summary_results = {
     'Average_F1': [avg_f1],
     'Average_ROC_AUC': [avg_roc_auc],
     'Average_PR_AUC': [avg_pr_auc],
-    'Model_Type': ['2-Class Binary Prediction'],
+    'Model_Type': ['2-Class Worsening Prediction'],
+    'Target_Definition': ['0: Non-worsening (Improved+Maintained), 1: Worsening'],
     'Timestamp': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
 }
 
@@ -280,10 +293,11 @@ results_dict = {
     },
     'hyperparameters': hyperparams,
     'disease_names': disease_names,
-    'input_dims': input_dims
+    'input_dims': input_dims,
+    'target_type': 'worsening'
 }
 
-pickle_path = os.path.join(save_dir, 'binary_model_results.pkl')
+pickle_path = os.path.join(save_dir, 'worsening_model_results.pkl')
 with open(pickle_path, 'wb') as f:
     pickle.dump(results_dict, f)
 print(f"✅ 전체 결과 저장: {pickle_path}")
@@ -293,17 +307,23 @@ print("=" * 80)
 print("🎯 임상 활용 가능성 평가")
 print("=" * 80)
 
-if avg_f1 >= 0.60:
-    print("✅ 임상 활용 가능 (F1 ≥ 0.60)")
-    print("   → 다음 단계: SHAP 해석, 웹 데모 구축")
+if avg_f1 >= 0.70:
+    print("🎉 우수! (F1 ≥ 0.70)")
+    print("   → 임상 활용 강력 추천")
+    print("   → 다음 단계: SHAP 해석, 웹 데모 구축, 실제 임상 적용")
+elif avg_f1 >= 0.60:
+    print("✅ 임상 활용 가능! (F1 ≥ 0.60)")
+    print("   → 조기 개입 시스템으로 활용 가능")
+    print("   → 다음 단계: 교차 검증, SHAP 해석, 파일럿 테스트")
 elif avg_f1 >= 0.55:
-    print("⚠️ 임상 활용 가능성 있음 (0.55 ≤ F1 < 0.60)")
-    print("   → 다음 단계: 교차 검증, 앙상블 강화")
+    print("⚠️ 유망 (0.55 ≤ F1 < 0.60)")
+    print("   → 추가 개선 필요")
+    print("   → 다음 단계: 하이퍼파라미터 최적화, 앙상블")
 else:
     print("❌ 추가 개선 필요 (F1 < 0.55)")
-    print("   → 다음 단계: 모델 아키텍처 개선, 하이퍼파라미터 재조정")
+    print("   → 다음 단계: 데이터 보강, 피처 재설계, 모델 변경")
 
 print()
 print("=" * 80)
-print("✅ 2-Class 예측 모델 학습 완료!")
+print("✅ 2-Class 악화 예측 모델 학습 완료!")
 print("=" * 80)

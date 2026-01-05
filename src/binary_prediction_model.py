@@ -91,18 +91,28 @@ class BinaryDiseasePredictor(nn.Module):
         return self.encoder(x)
 
 
-def convert_to_binary_targets(df, disease_names):
+def convert_to_binary_targets(df, disease_names, target_type='worsening'):
     """
     3-class 타겟을 2-class로 변환
     
     Args:
         df: DataFrame with {disease}_delta columns
         disease_names: List of disease names
+        target_type: 'worsening' (악화 예측) or 'change' (변화 감지)
     
     Returns:
         df_binary: DataFrame with binary targets
-            - 0: 유지 (원래 class 1)
-            - 1: 변화 (원래 class 0 + class 2)
+        
+    Target Types:
+        - 'worsening' (기본, 추천): 악화 예측
+            0: 비악화 (개선 + 유지, class 0 + 1)
+            1: 악화 (class 2)
+            → 임상적으로 의미 있음, 조기 개입 가능
+        
+        - 'change': 변화 감지
+            0: 유지 (class 1)
+            1: 변화 (개선 + 악화, class 0 + 2)
+            → 변화 자체를 감지
     """
     df_binary = df.copy()
     
@@ -110,9 +120,20 @@ def convert_to_binary_targets(df, disease_names):
         target_col = f'{disease}_delta'
         
         if target_col in df_binary.columns:
-            # 1 (유지) → 0 (유지)
-            # 0 (개선) + 2 (악화) → 1 (변화)
-            df_binary[target_col] = (df_binary[target_col] != 1).astype(int)
+            if target_type == 'worsening':
+                # 악화 예측 (추천)
+                # 0 (개선) + 1 (유지) → 0 (비악화)
+                # 2 (악화) → 1 (악화)
+                df_binary[target_col] = (df_binary[target_col] == 2).astype(int)
+            
+            elif target_type == 'change':
+                # 변화 감지
+                # 1 (유지) → 0 (유지)
+                # 0 (개선) + 2 (악화) → 1 (변화)
+                df_binary[target_col] = (df_binary[target_col] != 1).astype(int)
+            
+            else:
+                raise ValueError(f"Invalid target_type: {target_type}. Use 'worsening' or 'change'.")
     
     return df_binary
 

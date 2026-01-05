@@ -21,14 +21,33 @@
 문제점: 클래스 불균형 심각 (6:1 ~ 13:1) 🔴
 ```
 
-### 2-Class 모델 (유지 vs 변화) ⭐ 신규
+### 2-Class 모델 ⭐ 신규
+
+#### Option 1: 악화 예측 (Worsening Prediction) 🎯 **추천**
 ```
-목표: F1 > 0.60 (임상 활용 가능)
-클래스 불균형: 3:1 ~ 5:1 (개선됨) ✅
-예상 성능: F1 = 0.65 ~ 0.75
+타겟: 비악화(0) vs 악화(1)
+  - Class 0: 비악화 (개선 + 유지)
+  - Class 1: 악화
+
+임상적 의미:
+  - 악화를 조기에 감지하여 예방적 개입 가능
+  - 고위험군 식별 및 관리
+
+클래스 불균형: 4:1 ~ 6:1 ✅
+예상 성능: F1 = 0.60 ~ 0.75
 ```
 
-**클래스 불균형 분석:**
+#### Option 2: 변화 감지 (Change Detection)
+```
+타겟: 유지(0) vs 변화(1)
+  - Class 0: 유지
+  - Class 1: 변화 (개선 + 악화)
+
+클래스 불균형: 3:1 ~ 5:1 ✅
+현재 성능: F1 = 0.35 ~ 0.38 (낮음)
+```
+
+**클래스 분포 (원본 3-class):**
 - 개선: 6.7-11.5% (매우 적음)
 - 유지: 73.4-84.5% (압도적 다수)
 - 악화: 8.2-15.1% (적음)
@@ -47,9 +66,11 @@
 입력 75차원 → 4층 신경망 (256 → 128 → 64 → 32) → 출력 2-class
 
 특징:
-- Hidden dim = 64 (8배 증가)
-- 타겟: 유지(0) vs 변화(1)
-- 클래스 불균형 완화 (3:1 ~ 5:1)
+- Hidden dim = 128 (악화 예측), 64 (변화 감지)
+- 2가지 타겟 타입 지원:
+  1. 'worsening': 비악화(0) vs 악화(1) 🎯 추천
+  2. 'change': 유지(0) vs 변화(1)
+- 클래스 불균형 완화 (3:1 ~ 6:1)
 - 학습 용이성 향상
 
 학습:
@@ -61,7 +82,8 @@
 
 파일:
 - binary_prediction_model.py: 모델 정의 및 학습/평가 함수
-- run_binary_model.py: 실행 스크립트
+- run_binary_model.py: 변화 감지 실행 스크립트
+- run_binary_worsening.py: 악화 예측 실행 스크립트 🎯 추천
 ```
 
 ## 📂 프로젝트 구조
@@ -73,7 +95,8 @@ webapp/
 │   ├── feature_engineering.py      # 피처 엔지니어링 (PCA, Interaction)
 │   ├── MetS_prediction_model.py    # 딥러닝 모델 (3-Class)
 │   ├── binary_prediction_model.py  # 2-Class 예측 모델 ⭐ 신규
-│   ├── run_binary_model.py         # 2-Class 모델 실행 스크립트 ⭐ 신규
+│   ├── run_binary_model.py         # 변화 감지 모델 실행 스크립트 ⭐ 신규
+│   ├── run_binary_worsening.py     # 악화 예측 모델 실행 스크립트 🎯 추천 신규
 │   ├── train_eval_function.py      # 학습/평가
 │   ├── loss_functions.py           # Loss 함수 (개선 버전 포함)
 │   ├── resampling.py               # SMOTE, 불균형 처리
@@ -105,7 +128,23 @@ cd src
 jupyter notebook main.ipynb
 ```
 
-#### 방법 2: 2-Class 모델 (권장) ⭐ 신규
+#### 방법 2: 2-Class 악화 예측 모델 🎯 **추천** ⭐ 신규
+```bash
+cd src
+python run_binary_worsening.py
+```
+
+**결과 저장 위치**: `../result/binary_worsening/`
+- `detailed_results.csv`: 질병별 상세 성능
+- `summary_results.csv`: 평균 성능 요약
+- `worsening_model_results.pkl`: 전체 결과 (모델 포함)
+
+**임상적 의미**:
+- 악화를 조기에 감지하여 예방적 개입 가능
+- 고위험군 식별 및 관리
+- 목표: F1 ≥ 0.60 (임상 활용 가능)
+
+#### 방법 3: 2-Class 변화 감지 모델 ⭐ 신규
 ```bash
 cd src
 python run_binary_model.py
