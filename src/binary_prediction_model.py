@@ -117,6 +117,63 @@ def convert_to_binary_targets(df, disease_names):
     return df_binary
 
 
+def create_binary_loaders(train_df, val_df, test_df, disease_names, 
+                          batch_size=64, resample_method='smote'):
+    """
+    2-Class 데이터 로더 생성
+    
+    Args:
+        train_df, val_df, test_df: DataFrames (already converted to binary)
+        disease_names: List of disease names
+        batch_size: Batch size
+        resample_method: 'smote' or None
+    
+    Returns:
+        train_loaders: Dict of train DataLoaders per disease
+        val_loaders: Dict of val DataLoaders per disease
+        test_loaders: Dict of test DataLoaders per disease
+        input_dims: Dict of input dimensions
+    """
+    # SMOTE 적용
+    if resample_method == 'smote':
+        print(f"SMOTE 리샘플링 적용 중...")
+        resampled_train = create_resampled_dataset(train_df, resample_method)
+        
+        # Train 로더: SMOTE 데이터 사용
+        train_loaders = {}
+        for disease_name in disease_names:
+            train_loaders[disease_name] = DataLoader(
+                resampled_train, 
+                batch_size=batch_size, 
+                shuffle=True,
+                drop_last=True
+            )
+        
+        # Val/Test 로더: 원본 데이터 사용
+        _, val_loaders, test_loaders = DataLoaderManager.create_disease_loaders(
+            train_df, val_df, test_df, batch_size=batch_size
+        )
+    else:
+        # SMOTE 없이 원본 데이터 사용
+        train_loaders, val_loaders, test_loaders = DataLoaderManager.create_disease_loaders(
+            train_df, val_df, test_df, batch_size=batch_size
+        )
+    
+    # 차원 확인
+    sample_batch = next(iter(train_loaders[disease_names[0]]))
+    input_dims = {
+        'diet': sample_batch['diet'].shape[1],
+        'demo': sample_batch['demo'].shape[1],
+        'life': sample_batch['life'].shape[1],
+        'bio': sample_batch['bio'].shape[1],
+        'delta': sample_batch['delta'].shape[1],
+        'inter': sample_batch['interaction'].shape[1],
+        'pca': sample_batch['pca'].shape[1]
+    }
+    
+    return train_loaders, val_loaders, test_loaders, input_dims
+
+
 def analyze_class_distribution(train_df, val_df, test_df, disease_names):
     """
     클래스 분포 분석
@@ -157,24 +214,34 @@ def analyze_class_distribution(train_df, val_df, test_df, disease_names):
                     print(" ⚠️ 보통")
 
 
-def train_binary_model(model, train_loader, val_loader, criterion, 
-                       optimizer, scheduler, early_stopping, max_epochs=100, device='cuda'):
+def train_binary_model(model, train_loader, val_loader, device='cuda',
+                       lr=1e-4, weight_decay=6e-4, patience=15, max_epochs=100):
     """
     2-Class 모델 학습
     
     Args:
         model: BinaryDiseasePredictor
         train_loader, val_loader: DataLoaders
-        criterion: Loss function
-        optimizer: Optimizer
-        scheduler: LR scheduler
-        early_stopping: EarlyStopping object
-        max_epochs: Maximum epochs
         device: Device
+        lr: Learning rate
+        weight_decay: Weight decay
+        patience: Early stopping patience
+        max_epochs: Maximum epochs
     
     Returns:
-        None (model is trained in-place)
+        model: Trained model (best weights loaded)
+        train_losses: List of train losses
+        val_losses: List of val losses
     """
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=5
+    )
+    early_stopping = EarlyStopping(patience=patience, min_delta=0.001)
+    
+    train_losses = []
+    val_losses = []
     for epoch in range(max_epochs):
         model.train()
         total_loss = 0
@@ -228,12 +295,20 @@ def train_binary_model(model, train_loader, val_loader, criterion,
         val_loss_avg = val_loss / val_count
         scheduler.step(val_loss_avg)
         
+        train_losses.append(train_loss)
+        val_losses.append(val_loss_avg)
+        
         if (epoch + 1) % 10 == 0:
             print(f"  Epoch {epoch+1}/{max_epochs} - Train: {train_loss:.4f}, Val: {val_loss_avg:.4f}")
         
         if early_stopping(val_loss_avg, model):
             print(f"  조기 종료: Epoch {epoch+1}")
             break
+    
+    # 최적 모델 로드
+    early_stopping.load_best_model(model)
+    
+    return model, train_losses, val_losses
 
 
 def evaluate_binary_model(model, test_loader, device='cuda'):
@@ -246,7 +321,7 @@ def evaluate_binary_model(model, test_loader, device='cuda'):
         device: Device
     
     Returns:
-        metrics: Dict with accuracy, f1_score, roc_auc, pr_auc
+        metrics: Dict with accuracy, f1, roc_auc, pr_auc
     """
     model.eval()
     all_preds = []
@@ -284,7 +359,7 @@ def evaluate_binary_model(model, test_loader, device='cuda'):
     
     return {
         'accuracy': accuracy,
-        'f1_score': f1,
+        'f1': f1,
         'roc_auc': roc_auc,
         'pr_auc': pr_auc
     }
