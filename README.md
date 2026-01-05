@@ -14,32 +14,54 @@
 
 ## 🎯 현재 성능
 
+### 3-Class 모델 (개선/유지/악화)
 ```
-베이스라인: F1 = 0.481 (CrossEntropy + SMOTE)
-최적화 후: F1 = 0.506 (Optuna 30 trials)
-목표 성능: F1 > 0.60
+베이스라인: F1 = 0.490 (5개 질병 평균)
+최적화 후: F1 = 0.378 (FocalLoss + Optuna)
+문제점: 클래스 불균형 심각 (6:1 ~ 13:1) 🔴
 ```
 
-**최적 하이퍼파라미터:**
-- dropout_rate: 0.357
-- l1_lambda: 0.000366
-- l2_lambda: 0.000596
+### 2-Class 모델 (유지 vs 변화) ⭐ 신규
+```
+목표: F1 > 0.60 (임상 활용 가능)
+클래스 불균형: 3:1 ~ 5:1 (개선됨) ✅
+예상 성능: F1 = 0.65 ~ 0.75
+```
+
+**클래스 불균형 분석:**
+- 개선: 6.7-11.5% (매우 적음)
+- 유지: 73.4-84.5% (압도적 다수)
+- 악화: 8.2-15.1% (적음)
 
 ## 🏗️ 모델 아키텍처
 
-### MultiDiseasePredictor (PyTorch)
+### 1. MultiDiseasePredictor (3-Class) - 기존
 ```
 입력 75차원 → 7개 인코더 (각 8차원) → 합성 56차원 → 출력 3-class
 
-인코더 그룹:
-1. Diet (19) → 2. Demo (4) → 3. Life (3) → 4. Bio (11)
-5. Delta (6) → 6. Interaction (6) → 7. PCA (10)
+문제점: Hidden dim = 8 (너무 작음), 클래스 불균형
+```
+
+### 2. BinaryDiseasePredictor (2-Class) ⭐ 신규 추천
+```
+입력 75차원 → 4층 신경망 (256 → 128 → 64 → 32) → 출력 2-class
+
+특징:
+- Hidden dim = 64 (8배 증가)
+- 타겟: 유지(0) vs 변화(1)
+- 클래스 불균형 완화 (3:1 ~ 5:1)
+- 학습 용이성 향상
 
 학습:
-- Optimizer: AdamW (lr=0.0001, wd=6e-4)
+- Optimizer: AdamW (lr=1e-4, wd=6e-4)
 - Scheduler: ReduceLROnPlateau
 - Early Stopping: patience=15
-- Loss: CrossEntropy / FocalLoss / WeightedCE
+- Loss: CrossEntropy
+- SMOTE: 적용
+
+파일:
+- binary_prediction_model.py: 모델 정의 및 학습/평가 함수
+- run_binary_model.py: 실행 스크립트
 ```
 
 ## 📂 프로젝트 구조
@@ -49,7 +71,9 @@ webapp/
 ├── src/
 │   ├── data_import.py              # 데이터 전처리
 │   ├── feature_engineering.py      # 피처 엔지니어링 (PCA, Interaction)
-│   ├── MetS_prediction_model.py    # 딥러닝 모델
+│   ├── MetS_prediction_model.py    # 딥러닝 모델 (3-Class)
+│   ├── binary_prediction_model.py  # 2-Class 예측 모델 ⭐ 신규
+│   ├── run_binary_model.py         # 2-Class 모델 실행 스크립트 ⭐ 신규
 │   ├── train_eval_function.py      # 학습/평가
 │   ├── loss_functions.py           # Loss 함수 (개선 버전 포함)
 │   ├── resampling.py               # SMOTE, 불균형 처리
@@ -74,10 +98,23 @@ pip install -r requirements.txt
 ```
 
 ### 2. 실행
+
+#### 방법 1: 3-Class 모델 (기존)
 ```bash
 cd src
 jupyter notebook main.ipynb
 ```
+
+#### 방법 2: 2-Class 모델 (권장) ⭐ 신규
+```bash
+cd src
+python run_binary_model.py
+```
+
+**결과 저장 위치**: `../result/binary_model/`
+- `detailed_results.csv`: 질병별 상세 성능
+- `summary_results.csv`: 평균 성능 요약
+- `binary_model_results.pkl`: 전체 결과 (모델 포함)
 
 ## 🔬 개선된 기능 (v0.2.0)
 
@@ -149,6 +186,6 @@ for loss_name, criterion in loss_configs.items():
 
 ---
 
-**최종 업데이트**: 2026-01-03  
-**버전**: v0.2.0  
-**상태**: Loss 함수 개선 완료, 실험 진행 예정
+**최종 업데이트**: 2026-01-05  
+**버전**: v0.3.0  
+**상태**: 2-Class 예측 모델 구현 완료 ⭐
