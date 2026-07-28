@@ -120,5 +120,5 @@ def apply_to_all_data(train_df, val_df, test_df):
     print(f"상호작용 피처: {len(interaction_features)}개")
     print(f"PCA 피처: {len(pca_features)}개") 
     print(f"실제 change_dim: {actual_change_dim}")
-    
-    return enhanced_train, enhanced_val, enhanced_test, actual_change_dim
+
+    return enhanced_train, enhanced_val, enhanced_test, actual_change_dim, pca

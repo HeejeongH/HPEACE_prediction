@@ -43,7 +43,7 @@ def load_trained_model_and_data(best_combo, best_params, actual_change_dim):
     data_processor = DataPreprocessor('../data/total_again.xlsx')
     train_df, val_df, test_df, _ = data_processor.process_all(normalize=True, selection_strategy=sel_strategy)    
 
-    train_df, val_df, test_df, actual_change_dim = apply_to_all_data(train_df, val_df, test_df)
+    train_df, val_df, test_df, actual_change_dim, _pca = apply_to_all_data(train_df, val_df, test_df)
     
     batch_size = 16
     dropout_rate = best_params['dropout_rate']    

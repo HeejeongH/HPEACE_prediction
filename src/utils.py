@@ -4,7 +4,6 @@ import torch
 from sklearn.metrics import precision_recall_curve, auc, roc_curve, accuracy_score, f1_score
 import matplotlib.pyplot as plt
 import os
-from MetS_prediction_model import MultiDiseasePredictor
 
 demo_cols = ['days_between', '나이_T0', '신장_T0', '성별_T0']
 life_cols = ['흡연_T0', '활동량_T0', '음주_T0']
@@ -16,6 +15,7 @@ mets_cols = ['Increased waist circumference', 'Elevated blood pressure', 'Impair
 disease_delta_cols = [f'{disease}_delta' for disease in mets_cols]
 
 def create_model_with_dynamic_dims(train_dataset, mets_cols, dropout_rate=0.4, l1_lambda=0, l2_lambda=0):
+    from MetS_prediction_model import MultiDiseasePredictor
     if hasattr(train_dataset, 'dims'):
         dims = train_dataset.dims
     else:
