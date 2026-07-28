@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.decomposition import PCA
-from utils import mets_cols
+from constants import mets_cols
 
 def create_medical_interactions(df):
     df_enhanced = df.copy()
